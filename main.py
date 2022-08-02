@@ -7,6 +7,7 @@ import discord
 from discord import Button
 import imageActions as IA
 
+
 directoryPath = os.path.dirname(os.path.realpath(__file__))
 f = open(directoryPath + "\\config.json")
 

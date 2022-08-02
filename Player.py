@@ -6,7 +6,7 @@ class S:  # short for status,stores stats
     DamageTakenMultiplier: int
     DamageDealtMultiplier: int
 
-    def __init__(self, MaxHP, PosX, PosY):
+    def __init__(self, MaxHP: int, PosX: int, PosY: int):
         self.maxHP = MaxHP
         self.currentHP = MaxHP
         self.posX = PosX
@@ -18,15 +18,15 @@ class S:  # short for status,stores stats
 class player:
     s = S
 
-    def __init__(self, maxHP, x, y):
+    def __init__(self, maxHP: int, x: int, y: int):
         self.s = S(maxHP, x, y)
 
     def moveTo(self, x, y):
         self.s.posX = x
         self.s.posY = y
 
-    def TakeDamage(self,amount:int):
-        self.s.currentHP-=amount
+    def TakeDamage(self, amount: int):
+        self.s.currentHP -= amount
 
     def PrintStatus(self):
         return "position:(" + str(self.s.posX) + ", " + str(self.s.posY) + ") \r HP: " + str(self.s.maxHP) + "/" + str(

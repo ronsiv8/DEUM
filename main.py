@@ -45,35 +45,74 @@ async def test(ctx):
 
 @bot.slash_command(name="start", description="Start the game!", guild_ids=[756058242781806703])
 async def start(ctx):
-    # ctx.interaction.
+    await ctx.interaction.response.defer()
+    timer = 60
+    users = [ctx.author.id]
     embed = discord.Embed(title="WELCOME TO DEUM.",
                           description="A battle arena of the gods you and your friends are about to verse in!",
                           color=0xff0000)
     embed.add_field(name="JOIN THIS GAME!", value="Press the button...", inline=False)
-    embed.add_field(name="Game will start in (TIMER)",
+    embed.add_field(name="Game will start in " + str(timer),
                     value="(It updates every two seconds. Don't worry if it seems stuck!)", inline=True)
     embed.add_field(name="GAME CREATOR - Force start by pressing the FORCE START Button.", value="\u200b", inline=True)
+    embed.add_field(name="AMOUNT OF PLAYERS - " + str(len(users)), value="\u200b", inline=True)
     joinButton = discord.ui.Button(label="JOIN!", style=discord.ButtonStyle.green)
+    forceStartButton = discord.ui.Button(label="FORCE START", style=discord.ButtonStyle.red)
     view = discord.ui.View()
+    joinButton.callback = joinButton
     view.add_item(joinButton)
     timer = 60
 
     async def timerLoop():
         nonlocal timer, origiMsg
-        while True:
-            await asyncio.sleep(2)
-            timer -= 2
-            embed = discord.Embed(title="WELCOME TO DEUM.",
-                                  description="A battle arena of the gods you and your friends are about to verse in!",
-                                  color=0xff0000)
-            embed.add_field(name="JOIN THIS GAME!", value="Press the button...", inline=False)
-            embed.add_field(name="Game will start in " + str(timer),
-                            value="(It updates every two seconds. Don't worry if it seems stuck!)", inline=True)
-            embed.add_field(name="GAME CREATOR - Force start by pressing the FORCE START Button.", value="\u200b",
-                            inline=True)
-            await origiMsg.edit(embed=embed)
+        await asyncio.sleep(2)
+        timer -= 2
+        embed = discord.Embed(title="WELCOME TO DEUM.",
+                              description="A battle arena of the gods you and your friends are about to verse in!",
+                              color=0xff0000)
+        embed.add_field(name="JOIN THIS GAME!", value="Press the button...", inline=False)
+        embed.add_field(name="Game will start in " + str(timer),
+                        value="(It updates every two seconds. Don't worry if it seems stuck!)", inline=True)
+        embed.add_field(name="GAME CREATOR - Force start by pressing the FORCE START Button.", value="\u200b",
+                        inline=True)
+        embed.add_field(name="AMOUNT OF PLAYERS - " + str(len(users)), value="\u200b", inline=True)
+        await origiMsg.edit(embed=embed)
+        await timerLoop()
 
+    async def forceStart(interaction):
+        nonlocal ctx, timer
+        if interaction.user.id == ctx.author.id:
+            if timer > 5:
+                timer = 5
+                embed = discord.Embed(title="WELCOME TO DEUM.",
+                                      description="A battle arena of the gods where you and your friends are about to verse in!",
+                                      color=0xff0000)
+                embed.add_field(name="JOIN THIS GAME!", value="Press the button...", inline=False)
+                embed.add_field(name="Game will start in " + str(timer),
+                                value="(It updates every two seconds. Don't worry if it seems stuck!)", inline=True)
+                embed.add_field(name="GAME CREATOR - Force start by pressing the FORCE START Button.", value="\u200b",
+                                inline=True)
+                embed.add_field(name="AMOUNT OF PLAYERS - " + str(len(users)), value="\u200b", inline=True)
+                await origiMsg.edit(embed=embed)
+
+    async def joinButton(interaction):
+        if interaction.user.id == ctx.author.id:
+            await interaction.response.defer()
+        users.append(interaction.user.id)
+        embed = discord.Embed(title="WELCOME TO DEUM.",
+                                description="A battle arena of the gods you and your friends are about to verse in!",
+                                color=0xff0000)
+        embed.add_field(name="JOIN THIS GAME!", value="Press the button...", inline=False)
+        embed.add_field(name="Game will start in " + str(timer),
+                        value="(It updates every two seconds. Don't worry if it seems stuck!)", inline=True)
+        embed.add_field(name="GAME CREATOR - Force start by pressing the FORCE START Button.", value="\u200b",
+                        inline=True)
+        embed.add_field(name="AMOUNT OF PLAYERS - " + str(len(users)), value="\u200b", inline=True)
+        await origiMsg.edit(embed=embed)
+    forceStartButton.callback = forceStart
+    view.add_item(forceStartButton)
     origiMsg = await ctx.respond(embed=embed, view=view)
+    await timerLoop()
 
 
 @bot.slash_command(name='move_to', description='move to x,y', guild_ids=[756058242781806703])

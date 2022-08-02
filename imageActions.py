@@ -40,7 +40,7 @@ def draw_grid_over_image(filename):
         y = j * myInterval + 40
         for i in range(nx):
             x = float(i) * myInterval + 20
-            ax.text(x, y, '{:d}'.format(i + j * nx + 1), color='w', ha='left', va='top')
+            ax.text(x, y, '({0}, {1})'.format(i + 1, j + 1), color='w', ha='left', va='top')
 
 
     # Save the figure

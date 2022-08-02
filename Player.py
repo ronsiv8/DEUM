@@ -1,3 +1,5 @@
+import discord
+
 class S:  # short for status,stores stats
     maxHP: int
     currentHP: int
@@ -17,9 +19,10 @@ class S:  # short for status,stores stats
 
 class player:
     s = S
-
-    def __init__(self, maxHP, x, y):
+    member: discord.Member
+    def __init__(self, maxHP, x, y, member):
         self.s = S(maxHP, x, y)
+        self.member = member
 
     def moveTo(self, x, y):
         self.s.posX = x

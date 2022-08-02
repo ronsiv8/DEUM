@@ -1,4 +1,5 @@
 import asyncio
+import io
 import json, os
 from Player import player, S
 from PIL import Image
@@ -16,31 +17,36 @@ token = data['token']
 
 bot = discord.Bot()
 
-testPlayer = player(10, 2, 2)
-
 img = Image.open(directoryPath + "\\images\\bg.jpg")
-img = img.resize((3000, 3000))
+img = img.resize((900, 2100))
 img.save(directoryPath + "\\images\\bg.jpg")
-
+testPlayer = None
 
 @bot.event
 async def on_ready():
+    global testPlayer
     print("its morbin time")
+    testPlayer = player(10, 2, 2, await bot.fetch_user(246757653282422795))
 
 
 @bot.slash_command(name='test', description='test', guild_ids=[756058242781806703])
 async def test(ctx):
     global testPlayer
     await ctx.defer()
+    img = await playerToImage(testPlayer)
+    await ctx.respond(file=img)
+
+
+async def playerToImage(player):
     image = Image.open(directoryPath + "\\images\\bg.jpg")
-    pfp = Image.open(directoryPath + "\\images\\pfp.png")
+    pfp = Image.open(io.BytesIO(await player.member.display_avatar.read()))
     pfp = IA.crop_center(pfp, 300, 300)
-    image.paste(pfp, (testPlayer.s.posX * 300, testPlayer.s.posY * 300))
+    image.paste(pfp, (player.s.posX * 300, player.s.posY * 300))
     image.save(directoryPath + "\\images\\grid.jpg")
     image = IA.draw_grid_over_image(directoryPath + "\\images\\grid.jpg")
     image.savefig(directoryPath + "\\images\\grid.jpg")
     img = discord.File(directoryPath + "\\images\\grid.jpg")
-    await ctx.respond(file=img)
+    return img
 
 
 @bot.slash_command(name="start", description="Start the game!", guild_ids=[756058242781806703])
@@ -59,8 +65,6 @@ async def start(ctx):
     joinButton = discord.ui.Button(label="JOIN!", style=discord.ButtonStyle.green)
     forceStartButton = discord.ui.Button(label="FORCE START", style=discord.ButtonStyle.red)
     view = discord.ui.View()
-    joinButton.callback = joinButton
-    view.add_item(joinButton)
     timer = 60
 
     async def timerLoop():
@@ -95,9 +99,10 @@ async def start(ctx):
                 embed.add_field(name="AMOUNT OF PLAYERS - " + str(len(users)), value="\u200b", inline=True)
                 await origiMsg.edit(embed=embed)
 
-    async def joinButton(interaction):
-        if interaction.user.id == ctx.author.id:
+    async def joinButtonCallback(interaction):
+        if interaction.user.id in users:
             await interaction.response.defer()
+            return
         users.append(interaction.user.id)
         embed = discord.Embed(title="WELCOME TO DEUM.",
                                 description="A battle arena of the gods you and your friends are about to verse in!",
@@ -108,9 +113,12 @@ async def start(ctx):
         embed.add_field(name="GAME CREATOR - Force start by pressing the FORCE START Button.", value="\u200b",
                         inline=True)
         embed.add_field(name="AMOUNT OF PLAYERS - " + str(len(users)), value="\u200b", inline=True)
+        await interaction.response.defer()
         await origiMsg.edit(embed=embed)
     forceStartButton.callback = forceStart
     view.add_item(forceStartButton)
+    joinButton.callback = joinButtonCallback
+    view.add_item(joinButton)
     origiMsg = await ctx.respond(embed=embed, view=view)
     await timerLoop()
 
@@ -119,6 +127,7 @@ async def start(ctx):
 async def moveTo(ctx, *, x: int, y: int):
     global testPlayer
     testPlayer.moveTo(x, y)
+    testPlayer = player(10, 2, 2, await bot.fetch_user(246757653282422795))
     await ctx.respond(testPlayer.PrintPos())
 
 

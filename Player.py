@@ -18,20 +18,17 @@ class S:  # short for status,stores stats
         self.posY = PosY
         self.DamageTakenMultiplier = 1
         self.DamageDealtMultiplier = 1
+        self.abilityCooldowns=[]
         for i in range(5):
             self.abilityCooldowns.append(0)
-        for i in range(len(self.abilityCooldowns)):
-            print(self.abilityCooldowns[i])
 
 
 class player:
     s = S
-    member: discord.Member
     hero = None
 
-    def __init__(self, x, y, member, heroName):
+    def __init__(self, x, y, heroName):
         self.s = S(x, y)
-        self.member = member
         dict = {
             "Sobek": Sobek,
         }

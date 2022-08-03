@@ -12,6 +12,3 @@ def add_game(game: Game):
         str(item) for item in game.players))
                    + "," + str(game.lengthX) + ", " + str(game.lengthY) + ")")
     conn.commit()
-
-
-print(cursor.execute("SELECT * FROM games").fetchall())

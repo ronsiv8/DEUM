@@ -3,6 +3,7 @@ import io
 import json, os
 import random
 
+import Player
 from game import Game
 
 from Player import player, S
@@ -12,7 +13,6 @@ import discord
 from discord import Button
 import imageActions as IA
 import databaseActions as DA
-
 
 currentGames = []
 
@@ -29,12 +29,11 @@ img = Image.open(directoryPath + "\\images\\bg.jpg")
 img = img.resize((900, 2100))
 img.save(directoryPath + "\\images\\bg.jpg")
 
-testPlayer = None
+testPlayer = player(0, 0, "Sobek")
 
 
 @bot.event
 async def on_ready():
-    global testPlayer
     print("its morbin time")
 
 
@@ -159,7 +158,8 @@ async def start_game(gameStats):
     imageCopy = img.copy()
     imageCopy = imageCopy.resize((2100, 2100))
     imageCopy.save(directoryPath + "\\games\\" + str(gameStats["gameId"]) + "\\bg.jpg")
-    game = Game(gameStats["gameId"], gameStats["creator"], gameStats["players"], gameStats["ctx"], imageCopy.width // 300
+    game = Game(gameStats["gameId"], gameStats["creator"], gameStats["players"], gameStats["ctx"],
+                imageCopy.width // 300
                 , imageCopy.height // 300)
     IA.draw_grid_over_image_with_players(directoryPath + "\\games\\" + str(gameStats["gameId"]) + "\\bg.jpg"
                                          , game.playerObjects)

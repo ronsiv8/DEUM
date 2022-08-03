@@ -1,10 +1,14 @@
 import discord
-from Sobek import Sobek
+import os
 
 from PIL import Image
+
+from game import Game
 from imageActions import crop_points
 
+
 class S:  # short for status,stores stats
+    team: int
     maxHP: int
     currentHP: int
     posX: int
@@ -15,15 +19,16 @@ class S:  # short for status,stores stats
     bleedAmount: int
     bleedTimer: int
 
-    def __init__(self, PosX: int, PosY: int):
+    def __init__(self, PosX: int, PosY: int, team):
         self.posX = PosX
         self.posY = PosY
         self.DamageTakenMultiplier = 1
         self.DamageDealtMultiplier = 1
+        self.bleedAmount = 0
+        self.bleedTimer = 0
+        self.abilityCooldowns = []
         for i in range(5):
             self.abilityCooldowns.append(0)
-        for i in range(len(self.abilityCooldowns)):
-            print(self.abilityCooldowns[i])
 
 
 class player:
@@ -32,9 +37,8 @@ class player:
     hero = None
     myGame = None
 
-    def __init__(self, x, y, member, heroName, myGame):
-        self.s = S(x, y)
-        self.member = member
+    def __init__(self, x, y, heroName, myGame, team):
+        self.s = S(x, y, team)
         dict = {
             "Sobek": hero.Sobek,
         }
@@ -62,8 +66,8 @@ class hero:
         image: Image
         maxHP: int = 3000
 
-        def __init__(self, player):
-            self.myPlayer = player
+        def __init__(self, plyer):
+            self.myPlayer = plyer
             self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\Sobek.png")
             self.image = crop_points(self.image, [9, 165, 309, 465])
             self.myPlayer.s.maxHP = self.maxHP
@@ -77,10 +81,10 @@ class hero:
             target.s.bleedTimer = 2
 
         def a2Possible(self, target: player):
+            d=Game
             for i in range(3):
                 for j in range(3):
-                    if not (i == 1 or j == 1):  # and grid[i,j]
-                        print("")
+                     print("")
 
         def a3(self, target: player):
             dmgmult = 1

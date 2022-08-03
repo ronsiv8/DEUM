@@ -9,12 +9,19 @@ class S:  # short for status,stores stats
     posY: int
     DamageTakenMultiplier: int
     DamageDealtMultiplier: int
+    abilityCooldowns: [int]
+    bleedAmount: int
+    bleedTimer: int
 
     def __init__(self, PosX: int, PosY: int):
         self.posX = PosX
         self.posY = PosY
         self.DamageTakenMultiplier = 1
         self.DamageDealtMultiplier = 1
+        for i in range(5):
+            self.abilityCooldowns.append(0)
+        for i in range(len(self.abilityCooldowns)):
+            print(self.abilityCooldowns[i])
 
 
 class player:

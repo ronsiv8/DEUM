@@ -21,6 +21,9 @@ class Game():
     bot: discord.ext.commands.Bot
     awaitingMoves: int
     turnNum: int = 0
+    mapMessage: discord.Message
+    actMessage: discord.Message
+    lastActMessage: discord.Message
 
     def __init__(self, id, creator, players, ctx, lengthX, lengthY, bot):
         self.id = id
@@ -32,6 +35,8 @@ class Game():
         self.bot = bot
         self.awaitingMoves = None
         self.turnNum = 0
+        self.mapMessage = None
+        self.actMessage = None
         # 2d array with length of lengthX and height of lengthY with object zone
         self.zones = np.empty((lengthX, lengthY), dtype=zone)
         self.playerObjects = []
@@ -73,9 +78,12 @@ class Game():
                                                                         " - YOUR TURN TO ACT!", color=0x8bd402)
         embed.add_field(name="You can move to:", value=moveableTo, inline=False)
         embed.add_field(name="And use moves:", value="usable moves", inline=True)
-
+        if self.actMessage is None:
+            self.actMessage = await self.ctx.send(embed=embed)
+            self.awaitingMoves = turnPlayer.member.id
+            return
+        await self.actMessage.edit(embed=embed)
         self.awaitingMoves = turnPlayer.member.id
-        await self.ctx.send(embed=embed)
 
     async def getNextPlayerTurn(self):
         if self.turnNum + 1 == len(self.playerObjects):

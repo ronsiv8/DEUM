@@ -1,15 +1,21 @@
 import asyncio
 import io
 import json, os
+import random
 
-import GridBlock
-import Player
+import Sobek
+from game import Game
+
 from Player import player, S
 from PIL import Image
 import json
 import discord
 from discord import Button
 import imageActions as IA
+import databaseActions as DA
+
+
+currentGames = []
 
 directoryPath = os.path.dirname(os.path.realpath(__file__))
 f = open(directoryPath + "\\config.json")
@@ -44,8 +50,12 @@ async def on_ready():
 async def test(ctx):
     global testPlayer
     await ctx.defer()
-    img = await playerToImage(testPlayer)
-    await ctx.respond(file=img)
+    img = Sobek.Sobek(testPlayer).image
+    with io.BytesIO() as file:
+        img.save(file, format='PNG')
+        file.seek(0)
+        await ctx.send(file=discord.File(file, 'test.png'))
+    await ctx.respond("w: " + str(img.width) + " h: " + str(img.height))
 
 
 async def playerToImage(player):
@@ -78,12 +88,29 @@ async def start(ctx):
     view = discord.ui.View()
     timer = 60
 
+    async def init_game():
+        """
+        So basically this is here only to account for the _very_ rare case where there the gameId is already in use.
+        VERY. RARE. Thank you copilot. :D <- that was copilot, not me. <- that was also copilot. <- that was copilot. <- that was copilot.
+        :return:
+        """
+        # copilot, whats 1 + 1? 1 + 1 = 2?
+        # copilot, whats 12341302 + 439582? 12341302 + 439582 = 12341346? how interesting, thats wrong.
+        # AI is interesting because it can actually be wrong.
+        gameId = random.randint(10000, 99999)
+        # check if directory with the name gameId exists
+        if not os.path.exists(directoryPath + "\\games\\" + str(gameId)):
+            gameJson = {"creator": ctx.author.id, "players": users, "gameId": gameId, "ctx": ctx}
+            await start_game(gameJson)
+        else:
+            await init_game()
+
     async def timerLoop():
         nonlocal timer, origiMsg
-        await asyncio.sleep(2)
-        timer -= 2
+        await asyncio.sleep(1)
+        timer -= 1
         embed = discord.Embed(title="WELCOME TO DEUM.",
-                              description="A battle arena of the gods you and your friends are about to verse in!",
+                              description="A battle arena of the gods where you and your friends are about to verse in!",
                               color=0xff0000)
         embed.add_field(name="JOIN THIS GAME!", value="Press the button...", inline=False)
         embed.add_field(name="Game will start in " + str(timer),
@@ -92,7 +119,11 @@ async def start(ctx):
                         inline=True)
         embed.add_field(name="AMOUNT OF PLAYERS - " + str(len(users)), value="\u200b", inline=True)
         await origiMsg.edit(embed=embed)
-        await timerLoop()
+        if timer > 0:
+            await timerLoop()
+        else:
+            await origiMsg.delete()
+            await init_game()
 
     async def forceStart(interaction):
         nonlocal ctx, timer
@@ -116,7 +147,7 @@ async def start(ctx):
             return
         users.append(interaction.user.id)
         embed = discord.Embed(title="WELCOME TO DEUM.",
-                              description="A battle arena of the gods you and your friends are about to verse in!",
+                              description="A battle arena of the gods where you and your friends are about to verse in!",
                               color=0xff0000)
         embed.add_field(name="JOIN THIS GAME!", value="Press the button...", inline=False)
         embed.add_field(name="Game will start in " + str(timer),
@@ -138,6 +169,21 @@ async def start(ctx):
 async def getSizeOfBoard():
     img = Image.open(directoryPath + "\\images\\bg.jpg")
     return [img.width // 300, img.height // 300]
+
+
+async def start_game(gameStats):
+    ctx = gameStats["ctx"]
+    # create directory with the name of the gameId
+    os.mkdir(directoryPath + "\\games\\" + str(gameStats["gameId"]))
+    img = Image.open(directoryPath + "\\images\\bg.jpg")
+    imageCopy = img.copy()
+    imageCopy = imageCopy.resize((2100, 2100))
+    imageCopy.save(directoryPath + "\\games\\" + str(gameStats["gameId"]) + "\\bg.jpg")
+    # TODO figure out if we need a Games class and remove if not (this is somewhat inefficient)
+    game = Game(gameStats["gameId"], gameStats["creator"], gameStats["players"], gameStats["ctx"], imageCopy.width // 300
+                , imageCopy.height // 300)
+    DA.add_game(game)
+    await ctx.send("created!")
 
 
 @bot.slash_command(name='move_to', description='move to x,y', guild_ids=[756058242781806703])

@@ -53,3 +53,11 @@ def crop_center(pil_img, crop_width, crop_height):
                          (img_height - crop_height) // 2,
                          (img_width + crop_width) // 2,
                          (img_height + crop_height) // 2))
+
+
+def crop_points(pil_img, points):
+    img_width, img_height = pil_img.size
+    return pil_img.crop(((points[0]),
+                         (points[1]),
+                         (points[2]),
+                         (points[3])))

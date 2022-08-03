@@ -47,6 +47,13 @@ def draw_grid_over_image(filename):
     return fig
 
 
+def draw_grid_over_image_with_players(filename, players):
+    # get the grid image
+    originalGrid = draw_grid_over_image(filename)
+    # fig to image
+    originalGrid.savefig(filename)
+    print(originalGrid.type)
+
 def crop_center(pil_img, crop_width, crop_height):
     img_width, img_height = pil_img.size
     return pil_img.crop(((img_width - crop_width) // 2,

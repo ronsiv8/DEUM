@@ -3,7 +3,6 @@ import io
 import json, os
 import random
 
-import Sobek
 from game import Game
 
 from Player import player, S
@@ -29,12 +28,8 @@ bot = discord.Bot()
 img = Image.open(directoryPath + "\\images\\bg.jpg")
 img = img.resize((900, 2100))
 img.save(directoryPath + "\\images\\bg.jpg")
-# grid: [[GridBlock.gridBlock]]
-# for i in range(3):
-#     for j in range(7):
-#         grid[i][j] = GridBlock.gridBlock()
-#
-# print(str(len(grid))+", "+str(len(grid[0])))
+
+IA.draw_grid_over_image_with_players(directoryPath + "\\images\\bg.jpg", None)
 
 testPlayer = None
 
@@ -44,18 +39,6 @@ async def on_ready():
     global testPlayer
     print("its morbin time")
     testPlayer = player(10, 2, 2, await bot.fetch_user(246757653282422795))
-
-
-@bot.slash_command(name='test', description='test', guild_ids=[756058242781806703])
-async def test(ctx):
-    global testPlayer
-    await ctx.defer()
-    img = Sobek.Sobek(testPlayer).image
-    with io.BytesIO() as file:
-        img.save(file, format='PNG')
-        file.seek(0)
-        await ctx.send(file=discord.File(file, 'test.png'))
-    await ctx.respond("w: " + str(img.width) + " h: " + str(img.height))
 
 
 async def playerToImage(player):

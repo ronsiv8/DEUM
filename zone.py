@@ -1,8 +1,8 @@
-import Player
+from Player import player
 
 
 class zone:
-    myPlayer: Player.player
+    myPlayer: player
     isBattle: bool
     isClosed: bool
 

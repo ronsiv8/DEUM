@@ -2,6 +2,7 @@ import discord.ext.commands.context
 import numpy as np
 from zone import zone
 from Player import player
+import imageActions as IA
 
 
 class Game():
@@ -31,6 +32,8 @@ class Game():
                 newPlayer = player(playerX, playerY, discordId, "Sobek")
                 self.playerObjects.append(newPlayer)
                 self.zones[playerX][playerY].myPlayer = newPlayer
+
             get_zone()
 
-
+    def generate_map(self):
+        pass

@@ -3,7 +3,6 @@ import os
 
 from PIL import Image
 
-from game import Game
 from imageActions import crop_points
 
 
@@ -19,7 +18,7 @@ class S:  # short for status,stores stats
     abilityCooldowns: [int]
     statusEffects: dict = {}
 
-    def __init__(self, PosX: int, PosY: int, Team, movementSpeed=1):
+    def __init__(self, PosX: int, PosY: int, Team, movementSpeed=3):
         self.posX = PosX
         self.posY = PosY
         team = Team
@@ -29,6 +28,7 @@ class S:  # short for status,stores stats
         self.bleedAmount = 0
         self.bleedTimer = 0
         self.abilityCooldowns = []
+        self.statusEffects = {}
         for i in range(5):
             self.abilityCooldowns.append(0)
 
@@ -37,7 +37,7 @@ class player:
     s = S
     member: discord.Member
     hero = None
-    myGame: Game = None
+    myGame = None # Game, cannot import because of circular dependency
 
     def __init__(self, x, y, member, heroName, myGame, team):
         self.s = S(x, y, team)
@@ -59,7 +59,7 @@ class player:
 
     def PrintStatus(self):
         return "position:(" + str(self.s.posX) + ", " + str(self.s.posY) + ") (functionally " + \
-        str(self.s.posX + 1) + ", " + str(self.s.posY + 1) + ")\r HP: " + str(self.s.maxHP) + "/" + str(
+               str(self.s.posX + 1) + ", " + str(self.s.posY + 1) + ")\r HP: " + str(self.s.maxHP) + "/" + str(
             self.s.currentHP)
 
     def canMoveTo(self):
@@ -97,9 +97,9 @@ class hero:
 
         def a1(self, target: player):
             target.TakeDamage(100)
-            if not "bleed" in target.s:
-                target.s.statusEffects['bleed':0]
-                target.s.statusEffects['bleedTimer':0]
+            if "bleed" not in target.s:
+                target.s.statusEffects['bleed'] = 0
+                target.s.statusEffects['bleedTimer'] = 0
             target.s.statusEffects[
                 'bleed'] += 100 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
             target.s.statusEffects['bleed'] *= 2
@@ -128,8 +128,8 @@ class hero:
             if "bleed" in target.s:
                 dmgmult = 2
             else:
-                target.s.statusEffects['bleed':0]
-                target.s.statusEffects['bleedTimer':0]
+                target.s.statusEffects['bleed'] = 0
+                target.s.statusEffects['bleedTimer'] = 0
             target.TakeDamage(200 * dmgmult)
             target.s.statusEffects[
                 'bleed'] += 200 * target.s.DamageTakenMultiplier * dmgmult * self.myPlayer.s.DamageDealtMultiplier

@@ -1,8 +1,6 @@
-from Player import player
-
 
 class zone:
-    myPlayer: player
+    myPlayer = None # its a Player, cannot add because of circular dependency
     isBattle: bool
     isClosed: bool
 

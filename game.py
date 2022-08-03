@@ -20,6 +20,7 @@ class Game():
     playerObjects: list[player]
     bot: discord.ext.commands.Bot
     awaitingMoves: int
+    turnNum: int = 0
 
     def __init__(self, id, creator, players, ctx, lengthX, lengthY, bot):
         self.id = id
@@ -30,6 +31,7 @@ class Game():
         self.lengthY = lengthY
         self.bot = bot
         self.awaitingMoves = None
+        self.turnNum = 0
         # 2d array with length of lengthX and height of lengthY with object zone
         self.zones = np.empty((lengthX, lengthY), dtype=zone)
         self.playerObjects = []
@@ -55,14 +57,17 @@ class Game():
         directoryPath = os.path.dirname(os.path.realpath(__file__))
         img = Image.open(directoryPath + "\\images\\bg.jpg")
         imageCopy = img.copy()
-        imageCopy = imageCopy.resize((1200, 1200))
+        imageCopy = imageCopy.resize((2700, 2700))
         imageCopy.save(directoryPath + "\\games\\" + str(self.id) + "\\bg.jpg")
         IA.draw_grid_over_image_with_players(directoryPath + "\\games\\" + str(self.id) + "\\bg.jpg"
                                              , self.playerObjects)
         # image is created on map.jpg
 
-    async def doTurn(self, turnNum):
-        turnPlayer = self.playerObjects[turnNum]
+    async def doTurn(self):
+        self.turnNum += 1
+        if self.turnNum == len(self.playerObjects):
+            self.turnNum = 0
+        turnPlayer = self.playerObjects[self.turnNum]
         moveableTo = turnPlayer.canMoveTo()
         embed = discord.Embed(title=turnPlayer.hero.heroName + " - " + turnPlayer.member.display_name +
                                                                         " - YOUR TURN TO ACT!", color=0x8bd402)
@@ -71,3 +76,11 @@ class Game():
 
         self.awaitingMoves = turnPlayer.member.id
         await self.ctx.send(embed=embed)
+
+    async def getNextPlayerTurn(self):
+        if self.turnNum + 1 == len(self.playerObjects):
+            return self.playerObjects[0]
+        return self.playerObjects[self.turnNum + 1]
+
+    async def getCurrentPlayerTurn(self):
+        return self.playerObjects[self.turnNum]

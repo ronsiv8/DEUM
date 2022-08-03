@@ -6,7 +6,7 @@ import random
 
 from game import Game
 
-from Player import player, S
+from Player import player
 from PIL import Image
 import json
 import discord
@@ -151,7 +151,7 @@ async def start_game(gameStats):
     os.mkdir(directoryPath + "\\games\\" + str(gameStats["gameId"]))
     img = Image.open(directoryPath + "\\images\\bg.jpg")
     imageCopy = img.copy()
-    imageCopy = imageCopy.resize((1200, 1200))
+    imageCopy = imageCopy.resize((2700, 2700))
     imageCopy.save(directoryPath + "\\games\\" + str(gameStats["gameId"]) + "\\bg.jpg")
     memberList = []
     for player in gameStats['players']:
@@ -163,16 +163,12 @@ async def start_game(gameStats):
                 imageCopy.width // 300
                 , imageCopy.height // 300, bot)
     currentGames.append(game)
-    IA.draw_grid_over_image_with_players(directoryPath + "\\games\\" + str(gameStats["gameId"]) + "\\bg.jpg"
-                                         , game.playerObjects)
+    await game.generate_map()
+    await game.doTurn()
+    currentPlayer = await game.getCurrentPlayerTurn()
+    currentPlayerMoves = currentPlayer.canMoveTo()
+    await IA.add_checks_to_map(currentPlayerMoves, game.id, currentPlayer.s.posX, currentPlayer.s.posY)
     await ctx.respond(file=discord.File(directoryPath + "\\games\\" + str(gameStats["gameId"]) + "\\map.png"))
-    await gameLoop(game)
-
-
-async def gameLoop(game):
-    for x in range(len(game.playerObjects)):
-        if game.awaitingMoves is None:
-            await game.doTurn(x)
 
 
 async def findPlayerObject(userId):
@@ -191,6 +187,9 @@ async def moveTo(ctx, *, x: int, y: int):
     if userPlayer is None:
         await ctx.respond("You are not in a game!")
         return
+    if userPlayer.myGame.awaitingMoves is None or userPlayer.myGame.awaitingMoves != ctx.author.id:
+        await ctx.respond("It is not your turn!")
+        return
     possibleMoves = userPlayer.canMoveTo()
     if (x, y) not in possibleMoves:
         await ctx.respond("You can't move there! Moves:" + str(possibleMoves))
@@ -198,7 +197,12 @@ async def moveTo(ctx, *, x: int, y: int):
     userPlayer.moveTo(x - 1, y - 1)
     await ctx.send("CURRENT: " + userPlayer.PrintStatus())
     await userPlayer.myGame.generate_map()
+    # add checks
+    nextPlayerMoves = await userPlayer.myGame.getNextPlayerTurn()
+    nextPlayerMoves = nextPlayerMoves.canMoveTo()
+    await IA.add_checks_to_map(nextPlayerMoves, userPlayer.myGame.id, userPlayer.s.posX, userPlayer.s.posY)
     await ctx.respond(file=discord.File(directoryPath + "\\games\\" + str(userPlayer.myGame.id) + "\\map.png"))
+    await userPlayer.myGame.doTurn()
 
 
 @bot.slash_command(name='set_pos', description='amogus', guild_ids=[756058242781806703])

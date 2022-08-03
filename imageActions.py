@@ -69,6 +69,19 @@ def draw_grid_over_image_with_players(filename, players, input = False):
     gridCopy.save(directoryPath + "/map.png")
 
 
+async def add_checks_to_map(locationArray, gameId, playerX, playerY):
+    """
+    Receives an array of tuples of locations.
+    Adds a checkmark to each location.
+    """
+    directoryPath = os.path.dirname(os.path.realpath(__file__))
+    img = Image.open(directoryPath + "/games/" + str(gameId) + "/map.png")
+    for location in locationArray:
+        img.paste(Image.open(directoryPath + "/images/dot.png").convert("RGB")
+                  , ((location[0] - 1) * 300 + 125, (location[1] - 1) * 300 + 125),
+                  mask=Image.open(directoryPath + "/images/dot.png").convert("RGBA"))
+    img.save(directoryPath + "/games/" + str(gameId) + "/map.png")
+
 def crop_center(pil_img, crop_width, crop_height):
     img_width, img_height = pil_img.size
     return pil_img.crop(((img_width - crop_width) // 2,

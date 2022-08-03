@@ -16,16 +16,14 @@ class S:  # short for status,stores stats
     DamageTakenMultiplier: int
     DamageDealtMultiplier: int
     abilityCooldowns: [int]
-    bleedAmount: int
-    bleedTimer: int
+    statusEffects: dict = {}
 
-    def __init__(self, PosX: int, PosY: int, team):
+    def __init__(self, PosX: int, PosY: int, Team):
         self.posX = PosX
         self.posY = PosY
+        team = Team
         self.DamageTakenMultiplier = 1
         self.DamageDealtMultiplier = 1
-        self.bleedAmount = 0
-        self.bleedTimer = 0
         self.abilityCooldowns = []
         for i in range(5):
             self.abilityCooldowns.append(0)
@@ -35,7 +33,7 @@ class player:
     s = S
     member: discord.Member
     hero = None
-    myGame = None
+    myGame: Game = None
 
     def __init__(self, x, y, heroName, myGame, team):
         self.s = S(x, y, team)
@@ -62,7 +60,7 @@ class hero:
     heroObject = None
 
     class Sobek:
-        myPlayer = None
+        myPlayer: player = None
         image: Image
         maxHP: int = 3000
 
@@ -75,28 +73,48 @@ class hero:
 
         def a1(self, target: player):
             target.TakeDamage(100)
-            target.s.bleedAmount += 100 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
-            if target.s.bleedAmount > 0:
-                target.s.bleedAmount *= 2
-            target.s.bleedTimer = 2
+            if not "bleed" in target.s:
+                target.s.statusEffects['bleed':0]
+                target.s.statusEffects['bleedTimer':0]
+            target.s.statusEffects[
+                'bleed'] += 100 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
+            target.s.statusEffects['bleed'] *= 2
+            target.s.statusEffects['bleedTimer'] = 2
 
         def a2Possible(self, target: player):
-            d=Game
             for i in range(3):
                 for j in range(3):
-                     print("")
+                    if self.myPlayer.myGame.zones[i][j].isOccupied() and "bleed" in self.myPlayer.myGame.zones[i][
+                        j].myPlayer.s.statusEffects:
+                        return True
+            return False
+
+        def a2(self, x: int, y: int):
+            if not self.myPlayer.myGame.zones[x][y].isOccupied():
+                self.myPlayer.moveTo(x, y)
+            for i in range(3):
+                for j in range(3):
+                    if self.myPlayer.myGame.zones[i][j].isOccupied() and self.myPlayer.myGame.zones[i][
+                        j].myPlayer.s.team != self.myPlayer.s.team and 'bleed' in self.myPlayer.myGame.zones[i][
+                        j].myPlayer.s.statusEffects:
+                        self.myPlayer.myGame.zones[i][j].myPlayer.s.statusEffects['bleedTimer'] = 2
 
         def a3(self, target: player):
             dmgmult = 1
-            if target.s.bleedAmount > 0:
+            if "bleed" in target.s:
                 dmgmult = 2
+            else:
+                target.s.statusEffects['bleed':0]
+                target.s.statusEffects['bleedTimer':0]
             target.TakeDamage(200 * dmgmult)
-            target.s.bleedAmount += 200 * target.s.DamageTakenMultiplier * dmgmult * self.myPlayer.s.DamageDealtMultiplier
-            target.s.bleedTimer = 2
+            target.s.statusEffects[
+                'bleed'] += 200 * target.s.DamageTakenMultiplier * dmgmult * self.myPlayer.s.DamageDealtMultiplier
+            target.s.statusEffects['bleedTimer'] = 2
 
         def ult(self, target: player):
-            bonus = target.s.bleedAmount
-            target.TakeDamage(bonus * self.myPlayer.s.DamageDealtMultiplier)
+            if "bleed" in target.s.statusEffects:
+                bonus = target.s.statusEffects['bleed']
+                target.TakeDamage(bonus * self.myPlayer.s.DamageDealtMultiplier)
 
     def __init__(self, heroName: str):
         self.heroName = heroName

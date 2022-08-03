@@ -1,6 +1,9 @@
 import asyncio
 import io
 import json, os
+
+import GridBlock
+import Player
 from Player import player, S
 from PIL import Image
 import json
@@ -20,6 +23,13 @@ bot = discord.Bot()
 img = Image.open(directoryPath + "\\images\\bg.jpg")
 img = img.resize((900, 2100))
 img.save(directoryPath + "\\images\\bg.jpg")
+# grid: [[GridBlock.gridBlock]]
+# for i in range(3):
+#     for j in range(7):
+#         grid[i][j] = GridBlock.gridBlock()
+#
+# print(str(len(grid))+", "+str(len(grid[0])))
+
 testPlayer = None
 
 
@@ -134,7 +144,7 @@ async def getSizeOfBoard():
 async def moveTo(ctx, *, x: int, y: int):
     await ctx.defer()
     size = await getSizeOfBoard()
-    if size[0] >= x > 0 and size[1] >= y > 0:
+    if size[0] >= x > 0 and size[1] >= y > 0 and grid[x][y] == 0:
         x -= 1
         y -= 1
         global testPlayer

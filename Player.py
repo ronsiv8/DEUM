@@ -2,10 +2,13 @@ import discord
 import os
 
 from PIL import Image
+
+from game import Game
 from imageActions import crop_points
 
 
 class S:  # short for status,stores stats
+    team: int
     maxHP: int
     currentHP: int
     posX: int
@@ -16,7 +19,7 @@ class S:  # short for status,stores stats
     bleedAmount: int
     bleedTimer: int
 
-    def __init__(self, PosX: int, PosY: int):
+    def __init__(self, PosX: int, PosY: int, team):
         self.posX = PosX
         self.posY = PosY
         self.DamageTakenMultiplier = 1
@@ -32,8 +35,8 @@ class player:
     s = S
     hero = None
 
-    def __init__(self, x, y, heroName):
-        self.s = S(x, y)
+    def __init__(self, x, y, heroName, team):
+        self.s = S(x, y, team)
         dict = {
             "Sobek": hero.Sobek,
         }
@@ -60,8 +63,8 @@ class hero:
         image: Image
         maxHP: int = 3000
 
-        def __init__(self, player):
-            self.myPlayer = player
+        def __init__(self, plyer):
+            self.myPlayer = plyer
             self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\Sobek.png")
             self.image = crop_points(self.image, [9, 165, 309, 465])
             self.myPlayer.s.maxHP = self.maxHP
@@ -75,10 +78,10 @@ class hero:
             target.s.bleedTimer = 2
 
         def a2Possible(self, target: player):
+            d=Game
             for i in range(3):
                 for j in range(3):
-                    if not (i == 1 or j == 1):  # and grid[i,j]
-                        print("")
+                     print("")
 
         def a3(self, target: player):
             dmgmult = 1

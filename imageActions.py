@@ -50,7 +50,7 @@ def draw_grid_over_image(filename):
     return fig
 
 
-def draw_grid_over_image_with_players(filename, players):
+def draw_grid_over_image_with_players(filename, players, input = False):
     directoryPath = os.path.dirname(os.path.realpath(filename))
     # get the grid image
     originalGrid = draw_grid_over_image(filename)
@@ -59,9 +59,13 @@ def draw_grid_over_image_with_players(filename, players):
     originalGrid.savefig(directoryPath + "/grid.png")
     gridOriginal = Image.open(directoryPath + "/grid.png")
     gridCopy = gridOriginal.copy()
-    print(gridOriginal)
     for player in players:
-        gridCopy.paste(player.hero.image, (player.s.posX * 300, player.s.posY * 300))
+        print(player.s.posX)
+        print(player.s.posY)
+        if not input:
+            gridCopy.paste(player.hero.heroObject.image, (player.s.posX * 300, player.s.posY * 300), mask=player.hero.heroObject.image)
+        else:
+            gridCopy.paste(player.hero.heroObject.image, (player.s.posX * 300, player.s.posY * 300), mask=player.hero.heroObject.image)
     gridCopy.save(directoryPath + "/map.png")
 
 

@@ -1,9 +1,9 @@
 import asyncio
+import gc
 import io
 import json, os
 import random
 
-import Player
 from game import Game
 
 from Player import player, S
@@ -25,11 +25,6 @@ token = data['token']
 
 bot = discord.Bot()
 
-img = Image.open(directoryPath + "\\images\\bg.jpg")
-img = img.resize((900, 2100))
-img.save(directoryPath + "\\images\\bg.jpg")
-
-testPlayer = player(0, 0, "Sobek")
 
 
 @bot.event
@@ -156,29 +151,66 @@ async def start_game(gameStats):
     os.mkdir(directoryPath + "\\games\\" + str(gameStats["gameId"]))
     img = Image.open(directoryPath + "\\images\\bg.jpg")
     imageCopy = img.copy()
-    imageCopy = imageCopy.resize((2100, 2100))
+    imageCopy = imageCopy.resize((1200, 1200))
     imageCopy.save(directoryPath + "\\games\\" + str(gameStats["gameId"]) + "\\bg.jpg")
-    game = Game(gameStats["gameId"], gameStats["creator"], gameStats["players"], gameStats["ctx"],
+    memberList = []
+    for player in gameStats['players']:
+        newMember = bot.get_user(player)
+        if newMember is None:
+            newMember = await bot.fetch_user(player)
+        memberList.append(newMember)
+    game = Game(gameStats["gameId"], gameStats["creator"], memberList, gameStats["ctx"],
                 imageCopy.width // 300
-                , imageCopy.height // 300)
+                , imageCopy.height // 300, bot)
+    currentGames.append(game)
     IA.draw_grid_over_image_with_players(directoryPath + "\\games\\" + str(gameStats["gameId"]) + "\\bg.jpg"
                                          , game.playerObjects)
     await ctx.respond(file=discord.File(directoryPath + "\\games\\" + str(gameStats["gameId"]) + "\\map.png"))
+    await gameLoop(game)
+
+
+async def gameLoop(game):
+    for x in range(len(game.playerObjects)):
+        if game.awaitingMoves is None:
+            await game.doTurn(x)
+
+
+async def findPlayerObject(userId):
+    # look through all players and find the one with the same id as the userId.
+    for player in currentGames:
+        for playerObject in player.playerObjects:
+            if playerObject.member.id == userId:
+                return playerObject
+    return None
 
 
 @bot.slash_command(name='move_to', description='move to x,y', guild_ids=[756058242781806703])
 async def moveTo(ctx, *, x: int, y: int):
     await ctx.defer()
-    size = await getSizeOfBoard()
-    if size[0] >= x > 0 and size[1] >= y > 0:
-        x -= 1
-        y -= 1
-        global testPlayer
-        testPlayer.moveTo(x, y)
-        img = await playerToImage(testPlayer)
-        await ctx.respond(file=img)
-    else:
-        await ctx.respond("not a valid point.")
+    userPlayer: player = await findPlayerObject(ctx.author.id)
+    if userPlayer is None:
+        await ctx.respond("You are not in a game!")
+        return
+    possibleMoves = userPlayer.canMoveTo()
+    if (x, y) not in possibleMoves:
+        await ctx.respond("You can't move there! Moves:" + str(possibleMoves))
+        return
+    userPlayer.moveTo(x - 1, y - 1)
+    await ctx.send("CURRENT: " + userPlayer.PrintStatus())
+    await userPlayer.myGame.generate_map()
+    await ctx.respond(file=discord.File(directoryPath + "\\games\\" + str(userPlayer.myGame.id) + "\\map.png"))
 
 
+@bot.slash_command(name='set_pos', description='amogus', guild_ids=[756058242781806703])
+async def setPos(ctx, *, x: int, y: int):
+    await ctx.defer()
+    userPlayer: player = await findPlayerObject(ctx.author.id)
+    if userPlayer is None:
+        await ctx.respond("You are not in a game!")
+        return
+    userPlayer.moveTo(x - 1, y - 1)
+    await ctx.send("CURRENT: " + userPlayer.PrintStatus())
+    await ctx.send("POSSIBLE MOVES: " + str(userPlayer.canMoveTo()))
+    await userPlayer.myGame.generate_map()
+    await ctx.respond(file=discord.File(directoryPath + "\\games\\" + str(userPlayer.myGame.id) + "\\map.png"))
 bot.run(token)

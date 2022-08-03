@@ -18,6 +18,7 @@ class S:  # short for status,stores stats
         self.posY = PosY
         self.DamageTakenMultiplier = 1
         self.DamageDealtMultiplier = 1
+        self.abilityCooldowns = []
         for i in range(5):
             self.abilityCooldowns.append(0)
         for i in range(len(self.abilityCooldowns)):
@@ -28,14 +29,16 @@ class player:
     s = S
     member: discord.Member
     hero = None
+    myGame = None
 
-    def __init__(self, x, y, member, heroName):
+    def __init__(self, x, y, member, heroName, myGame):
         self.s = S(x, y)
         self.member = member
         dict = {
             "Sobek": Sobek,
         }
         self.hero = dict[heroName](player=self)
+        self.myGame = myGame
 
     def moveTo(self, x, y):
         self.s.posX = x

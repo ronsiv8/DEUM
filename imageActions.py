@@ -1,4 +1,5 @@
 import io
+import os
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plticker
@@ -11,7 +12,7 @@ except ImportError:
 
 
 def draw_grid_over_image(filename):
-    image = Image.open(filename)
+    image = Image.open(filename).copy()
     my_dpi = 500.
 
     # Set up figure
@@ -50,18 +51,18 @@ def draw_grid_over_image(filename):
 
 
 def draw_grid_over_image_with_players(filename, players):
+    directoryPath = os.path.dirname(os.path.realpath(filename))
     # get the grid image
     originalGrid = draw_grid_over_image(filename)
-    # fig to image
-    img_buf = io.BytesIO()
-    originalGrid.savefig(img_buf, format='jpg')
-    img_buf.seek(0)
-    gridOriginal = Image.open(img_buf)
+    # get directory of filename
+    # save to disk where filename directory is
+    originalGrid.savefig(directoryPath + "/grid.png")
+    gridOriginal = Image.open(directoryPath + "/grid.png")
     gridCopy = gridOriginal.copy()
     print(gridOriginal)
     for player in players:
         gridCopy.paste(player.hero.image, (player.s.posX * 300, player.s.posY * 300))
-    return gridCopy
+    gridCopy.save(directoryPath + "/map.png")
 
 
 def crop_center(pil_img, crop_width, crop_height):

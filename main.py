@@ -163,8 +163,7 @@ async def start_game(gameStats):
                 , imageCopy.height // 300)
     IA.draw_grid_over_image_with_players(directoryPath + "\\games\\" + str(gameStats["gameId"]) + "\\bg.jpg"
                                          , game.playerObjects)
-    imageCopy.save(directoryPath + "\\games\\" + str(gameStats["gameId"]) + "\\map.jpg")
-    await ctx.respond(file=discord.File(directoryPath + "\\games\\" + str(gameStats["gameId"]) + "\\map.jpg"))
+    await ctx.respond(file=discord.File(directoryPath + "\\games\\" + str(gameStats["gameId"]) + "\\map.png"))
 
 
 @bot.slash_command(name='move_to', description='move to x,y', guild_ids=[756058242781806703])

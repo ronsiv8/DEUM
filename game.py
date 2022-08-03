@@ -23,8 +23,13 @@ class Game():
         self.lengthY = lengthY
         # 2d array with length of lengthX and height of lengthY with object zone
         self.zones = np.empty((lengthX, lengthY), dtype=zone)
+        self.playerObjects = []
+        for i in range(lengthX):
+            for j in range(lengthY):
+                self.zones[i][j] = zone()
         for discordId in players:
             def get_zone():
+                nonlocal self
                 playerX = np.random.randint(0, lengthX)
                 playerY = np.random.randint(0, lengthY)
                 if self.zones[playerX][playerY].isOccupied():

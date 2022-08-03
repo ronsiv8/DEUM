@@ -29,8 +29,6 @@ img = Image.open(directoryPath + "\\images\\bg.jpg")
 img = img.resize((900, 2100))
 img.save(directoryPath + "\\images\\bg.jpg")
 
-IA.draw_grid_over_image_with_players(directoryPath + "\\images\\bg.jpg", None)
-
 testPlayer = None
 
 
@@ -38,7 +36,6 @@ testPlayer = None
 async def on_ready():
     global testPlayer
     print("its morbin time")
-    testPlayer = player(10, 2, 2, await bot.fetch_user(246757653282422795))
 
 
 async def playerToImage(player):
@@ -162,11 +159,12 @@ async def start_game(gameStats):
     imageCopy = img.copy()
     imageCopy = imageCopy.resize((2100, 2100))
     imageCopy.save(directoryPath + "\\games\\" + str(gameStats["gameId"]) + "\\bg.jpg")
-    # TODO figure out if we need a Games class and remove if not (this is somewhat inefficient)
     game = Game(gameStats["gameId"], gameStats["creator"], gameStats["players"], gameStats["ctx"], imageCopy.width // 300
                 , imageCopy.height // 300)
-    DA.add_game(game)
-    await ctx.send("created!")
+    IA.draw_grid_over_image_with_players(directoryPath + "\\games\\" + str(gameStats["gameId"]) + "\\bg.jpg"
+                                         , game.playerObjects)
+    imageCopy.save(directoryPath + "\\games\\" + str(gameStats["gameId"]) + "\\map.jpg")
+    await ctx.respond(file=discord.File(directoryPath + "\\games\\" + str(gameStats["gameId"]) + "\\map.jpg"))
 
 
 @bot.slash_command(name='move_to', description='move to x,y', guild_ids=[756058242781806703])

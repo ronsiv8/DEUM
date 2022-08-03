@@ -1,3 +1,5 @@
+import io
+
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plticker
 import numpy as np
@@ -51,8 +53,16 @@ def draw_grid_over_image_with_players(filename, players):
     # get the grid image
     originalGrid = draw_grid_over_image(filename)
     # fig to image
-    originalGrid.savefig(filename)
-    print(originalGrid.type)
+    img_buf = io.BytesIO()
+    originalGrid.savefig(img_buf, format='jpg')
+    img_buf.seek(0)
+    gridOriginal = Image.open(img_buf)
+    gridCopy = gridOriginal.copy()
+    print(gridOriginal)
+    for player in players:
+        gridCopy.paste(player.hero.image, (player.s.posX * 300, player.s.posY * 300))
+    return gridCopy
+
 
 def crop_center(pil_img, crop_width, crop_height):
     img_width, img_height = pil_img.size

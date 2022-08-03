@@ -1,4 +1,6 @@
 import discord
+from Sobek import Sobek
+
 
 class S:  # short for status,stores stats
     maxHP: int
@@ -8,9 +10,7 @@ class S:  # short for status,stores stats
     DamageTakenMultiplier: int
     DamageDealtMultiplier: int
 
-    def __init__(self, MaxHP: int, PosX: int, PosY: int):
-        self.maxHP = MaxHP
-        self.currentHP = MaxHP
+    def __init__(self, PosX: int, PosY: int):
         self.posX = PosX
         self.posY = PosY
         self.DamageTakenMultiplier = 1
@@ -20,9 +20,15 @@ class S:  # short for status,stores stats
 class player:
     s = S
     member: discord.Member
-    def __init__(self, maxHP, x, y, member):
-        self.s = S(maxHP, x, y)
+    hero = None
+
+    def __init__(self, x, y, member, heroName):
+        self.s = S(x, y)
         self.member = member
+        dict = {
+            "Sobek": Sobek,
+        }
+        self.hero = dict[heroName](player=self)
 
     def moveTo(self, x, y):
         self.s.posX = x

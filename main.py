@@ -144,7 +144,7 @@ async def getSizeOfBoard():
 async def moveTo(ctx, *, x: int, y: int):
     await ctx.defer()
     size = await getSizeOfBoard()
-    if size[0] >= x > 0 and size[1] >= y > 0 and grid[x][y] == 0:
+    if size[0] >= x > 0 and size[1] >= y > 0:
         x -= 1
         y -= 1
         global testPlayer

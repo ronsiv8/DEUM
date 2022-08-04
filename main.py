@@ -7,6 +7,7 @@ import random
 from game import Game
 
 from Player import player
+from Player import hero
 from PIL import Image
 import json
 import discord
@@ -190,7 +191,7 @@ async def moveTo(ctx, *, x: int, y: int):
         await ctx.respond("You are not in a game!")
         return
     if userPlayer.myGame.awaitingMoves is None or userPlayer.myGame.awaitingMoves != ctx.author.id:
-        await ctx.respond("It is not your turn!", delete_after=1)
+        await ctx.respond("It is not your turn!"+str(ctx.author.id), delete_after=1)
         return
     possibleMoves = userPlayer.canMoveTo()
     if (x, y) not in possibleMoves:
@@ -219,8 +220,24 @@ async def moveTo(ctx, *, x: int, y: int):
     async def fightCallback(interaction):
         userId = interaction.data['custom_id']
         attackPlayer: player = await findPlayerObject(int(userId))
-        battle = Battle([attackPlayer], [userPlayer], userPlayer.myGame)
+        battle = Battle(attackPlayer, userPlayer, userPlayer.myGame)
+        await fightRound(battle)
         await ctx.send(file=discord.File(battle.battleImagePath))
+
+    async def fightRound(battle):
+        async def selectView(member: discord.Member):
+            currentHero: hero = findPlayerObject(member.id).hero
+            for ability in currentHero.heroObject.moveList:
+                label = ability["abilityName"],
+                description = ability["abilityDesc"],
+                value = ""
+        await selectView(ctx.author)
+        async def select_callback(self, select, interaction):
+            # the function called when the user is done selecting options
+            # check if this user is the user that started the interaction
+            if interaction.user.id == battle.attackingTeam.member.id:
+                await interaction.response.send_message()
+
     buttons = []
     for player in adjecentPlayers:
         button = discord.ui.Button(label="FIGHT " + player.member.name, style=discord.ButtonStyle.red)

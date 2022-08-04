@@ -1,7 +1,10 @@
 import os
 import random
 
+import discord
+
 from Player import player
+from Player import hero
 from game import Game
 from PIL import Image
 from PIL import ImageOps
@@ -10,6 +13,8 @@ from PIL import ImageOps
 class Battle:
     defendingTeam: player
     attackingTeam: player
+    defenderAbility = None
+    attackerAbility = None
     turn: int  # 0 for attacking, 1 for defending
     turnNum: int  # number of turns taken
     myGame: Game
@@ -53,7 +58,13 @@ class Battle:
         self.battleImage.save(path + "\\Battles\\" + name + "\\battle.png")
         self.battleImagePath = path + "\\Battles\\" + name + "\\battle.png"
 
+    def ChooseAbility(self,plyer:player, abilityFunction):
+        if plyer==self.defendingTeam:
+            self.defenderAbility = abilityFunction
+        elif plyer==self.attackingTeam:
+            self.attackerAbility = abilityFunction
 
 
-
-
+    def executeCombat(self):
+        self.defenderAbility(self.attackingTeam)
+        self.attackerAbility(self.defendingTeam)

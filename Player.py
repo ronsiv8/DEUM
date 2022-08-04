@@ -100,7 +100,7 @@ class hero:
         myPlayer: player = None
         image: Image
         maxHP: int = 3000
-        moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 1}, "a2": {"abilityType": "outOfCombat",
+        moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 1,"abilityName":"coolCrocodileSlamAttacKTechnique","abilityDesc":"does big stuff thingies"}, "a2": {"abilityType": "outOfCombat",
                                                                                 "maxCooldown": 3}, "a3": {
             "abilityType": "inCombat", "maxCooldown": 0}, "ult": {"abilityType": "inCombat", "maxCooldown": 10}}
 

@@ -220,6 +220,7 @@ async def moveTo(ctx, *, x: int, y: int):
         userId = interaction.data['custom_id']
         attackPlayer: player = await findPlayerObject(int(userId))
         battle = Battle([attackPlayer], [userPlayer], userPlayer.myGame)
+        await ctx.send(file=discord.File(battle.battleImagePath))
     buttons = []
     for player in adjecentPlayers:
         button = discord.ui.Button(label="FIGHT " + player.member.name, style=discord.ButtonStyle.red)

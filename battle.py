@@ -4,24 +4,22 @@ import random
 from Player import player
 from game import Game
 from PIL import Image
+from PIL import ImageOps
 
 
 class Battle:
-    defendingTeam: [player]
-    attackingTeam: [player]
+    defendingTeam: player
+    attackingTeam: player
     turn: int  # 0 for attacking, 1 for defending
     turnNum: int  # number of turns taken
-    turnOrderDefending: [player]  # list of players in turn order
-    turnOrderAttacking: [player]  # list of players in turn order
     myGame: Game
+    battleImagePath: str
 
     def __init__(self, defendingTeam, attackingTeam, myGame):
         self.defendingTeam = defendingTeam
         self.attackingTeam = attackingTeam
         self.turn = 1  # defender starts
         self.turnNum = 0
-        self.turnOrderDefending = random.sample(self.defendingTeam, len(self.defendingTeam))
-        self.turnOrderAttacking = random.sample(self.attackingTeam, len(self.attackingTeam))
         self.myGame: Game = myGame
         # init battle image
         # create a new directory
@@ -31,11 +29,9 @@ class Battle:
         if not os.path.exists(path + "\\Battles"):
             os.makedirs(path + "\\Battles")
         name = ""
-        for player in self.defendingTeam:
-            name += player.member.name + " "
+        name += self.attackingTeam.member.name + " "
         name += "-"
-        for player in self.attackingTeam:
-            name += player.member.name + " "
+        name += self.defendingTeam.member.name + " "
         # delete the last space in name
         name = name[:-1]
         os.mkdir(path + "\\Battles\\" + name)
@@ -44,7 +40,20 @@ class Battle:
         originalBattleImage = Image.open(pathOfScript + "\\images\\battleBg.jpg")
         # create a new image
         self.battleImage = originalBattleImage.copy()
+        count = 0
+        heroImage = Image.open(pathOfScript + "\\images\\" + attackingTeam.hero.heroName + ".png")
+        heroImage = ImageOps.flip(heroImage)
+        self.battleImage.paste(heroImage, (attackingTeam.x * 100, attackingTeam.y * 100))
+        count += 1
+        count = 0
+        for player in defendingTeam:
+            heroImage = Image.open(pathOfScript + "\\images\\" + player.hero.heroName + ".png")
+            self.battleImage.paste(heroImage, (1000 + count * 100, 400 + count * 100))
+            count += 1
         self.battleImage.save(path + "\\Battles\\" + name + "\\battle.png")
+        self.battleImagePath = path + "\\Battles\\" + name + "\\battle.png"
+
+
 
 
 

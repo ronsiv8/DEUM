@@ -45,12 +45,11 @@ def draw_grid_over_image(filename):
             x = float(i) * myInterval + 20
             ax.text(x, y, '({0}, {1})'.format(i + 1, j + 1), color='w', ha='left', va='top')
 
-
     # Save the figure
     return fig
 
 
-def draw_grid_over_image_with_players(filename, players, input = False):
+def draw_grid_over_image_with_players(filename, players, input=False):
     directoryPath = os.path.dirname(os.path.realpath(filename))
     # get the grid image
     originalGrid = draw_grid_over_image(filename)
@@ -61,9 +60,11 @@ def draw_grid_over_image_with_players(filename, players, input = False):
     gridCopy = gridOriginal.copy()
     for player in players:
         if not input:
-            gridCopy.paste(player.hero.heroObject.image, (player.s.posX * 300, player.s.posY * 300), mask=player.hero.heroObject.image)
+            gridCopy.paste(player.hero.heroObject.image, (player.s.posX * 300, player.s.posY * 300),
+                           mask=player.hero.heroObject.image)
         else:
-            gridCopy.paste(player.hero.heroObject.image, (player.s.posX * 300, player.s.posY * 300), mask=player.hero.heroObject.image)
+            gridCopy.paste(player.hero.heroObject.image, (player.s.posX * 300, player.s.posY * 300),
+                           mask=player.hero.heroObject.image)
     gridCopy.save(directoryPath + "/map.png")
 
 
@@ -79,6 +80,7 @@ async def add_checks_to_map(locationArray, gameId, playerX, playerY):
                   , ((location[0] - 1) * 300 + 125, (location[1] - 1) * 300 + 125),
                   mask=Image.open(directoryPath + "/images/dot.png").convert("RGBA"))
     img.save(directoryPath + "/games/" + str(gameId) + "/map.png")
+
 
 def crop_center(pil_img, crop_width, crop_height):
     img_width, img_height = pil_img.size

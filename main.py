@@ -13,6 +13,7 @@ import discord
 from discord import Button
 import imageActions as IA
 import databaseActions as DA
+from battle import Battle
 
 currentGames = []
 
@@ -24,7 +25,6 @@ data = json.load(f)
 token = data['token']
 
 bot = discord.Bot()
-
 
 
 @bot.event
@@ -147,7 +147,7 @@ async def getSizeOfBoard():
 
 async def start_game(gameStats):
     ctx = gameStats["ctx"]
-    ctx.respond("Here we go!")
+    await ctx.respond("Here we go!", delete_after=1)
     # create directory with the name of the gameId
     os.mkdir(directoryPath + "\\games\\" + str(gameStats["gameId"]))
     img = Image.open(directoryPath + "\\images\\bg.jpg")
@@ -202,10 +202,35 @@ async def moveTo(ctx, *, x: int, y: int):
     nextPlayerMoves = await userPlayer.myGame.getNextPlayerTurn()
     nextPlayerMoves = nextPlayerMoves.canMoveTo()
     await IA.add_checks_to_map(nextPlayerMoves, userPlayer.myGame.id, userPlayer.s.posX, userPlayer.s.posY)
-    waitMessage = await ctx.respond("Moved!", delete_after=1)
+    await ctx.respond("Moved!", delete_after=1)
     await userPlayer.myGame.mapMessage.delete()
     message = await ctx.send(file=discord.File(directoryPath + "\\games\\" + str(userPlayer.myGame.id) + "\\map.png"))
     userPlayer.myGame.mapMessage = message
+    adjecentPlayers = await userPlayer.adjacentPlayers()
+    if not adjecentPlayers:
+        await userPlayer.myGame.doTurn()
+        return
+    embed = discord.Embed(title="BATTLE DETECTED!", color=0xff0000)
+    embed.add_field(name="The following enemies are close enough for you to engage in combat:", value="(ENEMIES)",
+                    inline=False)
+    embed.add_field(name="What do you want to do?", value="Choose your fights carefully...", inline=False)
+    view = discord.ui.View()
+
+    async def fightCallback(interaction):
+        userId = interaction.data['custom_id']
+        attackPlayer: player = await findPlayerObject(int(userId))
+        battle = Battle([attackPlayer], [userPlayer], userPlayer.myGame)
+    buttons = []
+    for player in adjecentPlayers:
+        button = discord.ui.Button(label="FIGHT " + player.member.name, style=discord.ButtonStyle.red)
+        button.custom_id = str(player.member.id)
+        button.callback = fightCallback
+        buttons.append(button)
+    for button in buttons:
+        view.add_item(button)
+    runButton = discord.ui.Button(label="Don't engage", style=discord.ButtonStyle.green)
+    view.add_item(runButton)
+    await ctx.respond(embed=embed, view=view)
     await userPlayer.myGame.doTurn()
 
 
@@ -221,4 +246,14 @@ async def setPos(ctx, *, x: int, y: int):
     await ctx.send("POSSIBLE MOVES: " + str(userPlayer.canMoveTo()))
     await userPlayer.myGame.generate_map()
     await ctx.respond(file=discord.File(directoryPath + "\\games\\" + str(userPlayer.myGame.id) + "\\map.png"))
+
+
+@bot.slash_command(name="battletest", description="amogus", guild_ids=[756058242781806703])
+async def battleTest(ctx):
+    bgImage = Image.open(directoryPath + "\\images\\bg.jpg")
+    bgImage = bgImage.resize((2700, 1200))
+    bgImage.save(directoryPath + "\\games\\battleBg.jpg")
+    await ctx.respond(file=discord.File(directoryPath + "\\games\\battleBg.jpg"))
+
+
 bot.run(token)

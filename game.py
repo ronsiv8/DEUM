@@ -24,6 +24,7 @@ class Game():
     mapMessage: discord.Message
     actMessage: discord.Message
     lastActMessage: discord.Message
+    directoryPath: str
 
     def __init__(self, id, creator, players, ctx, lengthX, lengthY, bot):
         self.id = id
@@ -37,6 +38,7 @@ class Game():
         self.turnNum = 0
         self.mapMessage = None
         self.actMessage = None
+        self.directoryPath = os.path.dirname(os.path.realpath(__file__)) + "\\games\\" + str(self.id)
         # 2d array with length of lengthX and height of lengthY with object zone
         self.zones = np.empty((lengthX, lengthY), dtype=zone)
         self.playerObjects = []

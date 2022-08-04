@@ -75,6 +75,18 @@ class player:
                         canMove.append((i + 1, j + 1))
         return canMove
 
+    async def adjacentPlayers(self):
+        """
+        Returns an array of players that are adjacent to the player.
+        """
+        adjacentPlayers = []
+        for i in range(self.s.posX - 1, self.s.posX + 2):
+            for j in range(self.s.posY - 1, self.s.posY + 2):
+                if 0 <= i < self.myGame.lengthX and 0 <= j < self.myGame.lengthY:
+                    if self.myGame.zones[i][j].isOccupied() and self.myGame.zones[i][j].myPlayer != self:
+                        adjacentPlayers.append(self.myGame.zones[i][j].myPlayer)
+        return adjacentPlayers
+
 
 class hero:
     heroName: str

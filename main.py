@@ -191,7 +191,7 @@ async def moveTo(ctx, *, x: int, y: int):
         await ctx.respond("You are not in a game!")
         return
     if userPlayer.myGame.awaitingMoves is None or userPlayer.myGame.awaitingMoves != ctx.author.id:
-        await ctx.respond("It is not your turn!"+str(ctx.author.id), delete_after=1)
+        await ctx.respond("It is not your turn!", delete_after=1)
         return
     possibleMoves = userPlayer.canMoveTo()
     if (x, y) not in possibleMoves:
@@ -218,25 +218,17 @@ async def moveTo(ctx, *, x: int, y: int):
     view = discord.ui.View()
 
     async def fightCallback(interaction):
+        if interaction.user.id != ctx.author.id:
+            await interaction.response.defer()
+            return
         userId = interaction.data['custom_id']
         attackPlayer: player = await findPlayerObject(int(userId))
-        battle = Battle(attackPlayer, userPlayer, userPlayer.myGame)
-        await fightRound(battle)
-        await ctx.send(file=discord.File(battle.battleImagePath))
-
-    async def fightRound(battle):
-        async def selectView(member: discord.Member):
-            currentHero: hero = findPlayerObject(member.id).hero
-            for ability in currentHero.heroObject.moveList:
-                label = ability["abilityName"],
-                description = ability["abilityDesc"],
-                value = ""
-        await selectView(ctx.author)
-        async def select_callback(self, select, interaction):
-            # the function called when the user is done selecting options
-            # check if this user is the user that started the interaction
-            if interaction.user.id == battle.attackingTeam.member.id:
-                await interaction.response.send_message()
+        battle = Battle(attackPlayer, userPlayer, userPlayer.myGame, ctx)
+        await fightRound(battle, userPlayer.hero)
+        await battleMessage.delete()
+        await battle.generateBattleImage()
+        view = MyView()
+        await ctx.send("Choose a move!", view=view)
 
     buttons = []
     for player in adjecentPlayers:
@@ -248,8 +240,44 @@ async def moveTo(ctx, *, x: int, y: int):
         view.add_item(button)
     runButton = discord.ui.Button(label="Don't engage", style=discord.ButtonStyle.green)
     view.add_item(runButton)
-    await ctx.respond(embed=embed, view=view)
+    battleMessage = await ctx.send(embed=embed, view=view)
     await userPlayer.myGame.doTurn()
+
+
+async def fightRound(battle, hero):
+    class MyView(discord.ui.View):
+        currentHero: hero = hero
+        optionsArray = []
+        for ability in currentHero.heroObject.moveList:
+            try:
+                if currentHero.heroObject.moveList[ability]['abilityType'] != "inCombat":
+                    continue
+                optionsArray.append(discord.SelectOption(
+                    label=currentHero.heroObject.moveList[ability]["abilityName"],
+                    description=currentHero.heroObject.moveList[ability]["abilityDesc"],
+                    value=ability + "," + currentHero.heroObject.moveList[ability]["abilityName"]
+                ))
+            except ValueError:
+                optionsArray.append(discord.SelectOption(
+                    label=currentHero.heroObject.moveList[ability]["abilityName"],
+                    description="This description is pretty long... check it out in the battle image!",
+                    value=ability + "," + currentHero.heroObject.moveList[ability]["abilityName"]
+                ))
+
+        @discord.ui.select(  # the decorator that lets you specify the properties of the select menu
+            placeholder="Choose a move!",
+            # the placeholder text that will be displayed if nothing is selected
+            min_values=1,  # the minimum number of values that must be selected by the users
+            max_values=1,  # the maxmimum number of values that can be selected by the users
+            options=optionsArray,  # the options that will be displayed to the user
+        )
+        async def select_callback(self, select,
+                                  interaction):  # the function called when the user is done selecting options
+            # check if this user is the user that started the interaction
+            if interaction.user.id == ctx.author.id:
+                await interaction.response.send_message(f"selected {str(select.values[0].split(',')[1])}!",
+                                                        delete_after=1)
+                await battle.ChooseAbility(await findPlayerObject(ctx.author.id), str(select.values[0].split(',')[0]))
 
 
 @bot.slash_command(name='set_pos', description='amogus', guild_ids=[756058242781806703])

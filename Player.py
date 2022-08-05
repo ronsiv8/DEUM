@@ -115,7 +115,8 @@ class hero:
                       "abilityDesc": "Sobek Strikes the enemy with all of his RAGE, dealing the amount of BLEED stacks on the enemy.",
                       "actionLine": "SOBEK destroys the enemy with all of his RAGE! It deals {damageDealt} to {target}!"}}
         playStyle = "Sobek is a well trained fighter, causing enemies to BLEED being his main power source. You have to " \
-                    "play aggressively and cause your enemies to BLEED if you want to win. " \
+                    "play aggressively and cause your enemies to BLEED if you want to win. "
+
 
         def __init__(self, plyer):
             self.myPlayer = plyer
@@ -125,7 +126,7 @@ class hero:
             self.myPlayer.s.currentHP = self.myPlayer.s.maxHP
 
         def a1(self, target: player):
-            target.TakeDamage(100)
+            target.TakeDamage(100 * self.myPlayer.s.DamageDealtMultiplier)
             if "bleed" not in target.s.statusEffects:
                 target.s.statusEffects["bleed"] = 0
             target.s.statusEffects[
@@ -171,8 +172,9 @@ class hero:
                                       " The damage is doubled!"}
             return {
                 "damageDealt": 200 * target.s.DamageTakenMultiplier * dmgmult * self.myPlayer.s.DamageDealtMultiplier,
-                "target": target.member.display_name, "bleed": target.s.statusEffects['bleed'], "additionalText": "SOBEK didnt fully "
-                                                                                              "utilize his power!"}
+                "target": target.member.display_name, "bleed": target.s.statusEffects['bleed'],
+                "additionalText": "SOBEK didnt fully "
+                                  "utilize his power!"}
 
         def ult(self, target: player):
             bonus = 0
@@ -180,6 +182,64 @@ class hero:
                 bonus = target.s.statusEffects['bleed']
                 target.TakeDamage(bonus * self.myPlayer.s.DamageDealtMultiplier)
             return {"damageDealt": bonus * self.myPlayer.s.DamageDealtMultiplier, "target": target.member.display_name}
+
+        myPlayer: player = None
+        image: Image
+        maxHP: int = 3500
+        moveList = {
+            "a1": {"abilityType": "inCombat", "maxCooldown": 1, "abilityName": "coolCrocodileSlamAttacKTechnique",
+                   "abilityDesc": "does big stuff thingies"}, "a2": {"abilityType": "outOfCombat",
+                                                                     "maxCooldown": 3}, "a3": {
+                "abilityType": "inCombat", "maxCooldown": 0}, "ult": {"abilityType": "inCombat", "maxCooldown": 10}}
+
+    class Ra:
+        myPlayer: player = None
+        image: Image
+        maxHP: int = 3500
+        SunOrbs: int = 0
+        # its just stolen sobek code it needs changing ik ron i can do it next time
+        moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 1, "abilityName": "Bleeding Strike"
+            , "abilityDesc": "Sobek Strikes his enemy, dealing 100 DAMAGE, refreshing BLEED's Duration on the target, "
+                             "and applying BLEED according to damage dealt. After that, DOUBLE the target's BLEED amount.",
+                           "actionLine": "SOBEK Strikes! It deals {damageDealt} to {target}! {target} now BLEEDS for {bleed}!"},
+                    "a2": {"abilityType": "outOfCombat", "maxCooldown": 3, "abilityName": "Hunter's Chase'",
+                           "abilityDesc": "Dash 2 tiles. After that, refresh BLEED's Duration on all enemies in a 3x3 area"}
+            , "a3": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Open Wounds",
+                     "abilityDesc": "Sobek strikes the enemy, dealing 200 DAMAGE, and applying BLEED to the target. If the "
+                                    "target is already BLEEDING, the damage is doubled.",
+                     "actionLine": "SOBEK Opens {target}'s wounds! {target} now BLEEDS for {bleed}! {damageDealt} dealt! "
+                                   "{additionalText}"}
+            , "ult": {"abilityType": "inCombat", "maxCooldown": 10, "abilityName": "Sobek's Rage",
+                      "abilityDesc": "Sobek Strikes the enemy with all of his RAGE, dealing the amount of BLEED stacks on the enemy.",
+                      "actionLine": "SOBEK destroys the enemy with all of his RAGE! It deals {damageDealt} to {target}!"}}
+        playStyle = "Sobek is a well trained fighter, causing enemies to BLEED being his main power source. You have to " \
+                    "play aggressively and cause your enemies to BLEED if you want to win. "
+        def __init__(self, plyer):
+            self.myPlayer = plyer
+            self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\Sobek.png")
+            self.image = crop_points(self.image, [9, 165, 309, 465])
+            self.myPlayer.s.maxHP = self.maxHP
+            self.myPlayer.s.currentHP = self.myPlayer.s.maxHP
+
+        def a1(self, target: player):
+            damagedealt = 0
+            target.TakeDamage(50 * self.myPlayer.s.DamageDealtMultiplier)
+            damagedealt += 50 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
+            if self.SunOrbs >= 5:
+                target.TakeDamage(150 * self.myPlayer.s.DamageDealtMultiplier)
+                damagedealt += 150 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
+            return {"damageDealt": damagedealt}
+
+        # def a2(self):
+        # end combat here no error pls okok thx
+
+        # def a3
+
+        def ult(self, target: player):
+            target.TakeDamage(1000 * self.myPlayer.s.DamageDealtMultiplier)
+            self.myPlayer.s.currentHP = max(
+                min(self.myPlayer.s.currentHP + 1000 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier,
+                    self.myPlayer.s.maxHP), self.myPlayer.s.currentHP)
 
     def __init__(self, heroName: str, player):
         self.heroName = heroName

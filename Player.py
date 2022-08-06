@@ -44,6 +44,7 @@ class player:
         self.s = S(x, y, team)
         dict = {
             "Sobek": hero("Sobek", self),
+            "Ra":hero("Ra",self),
         }
         self.hero = dict[heroName]
         self.myGame = myGame
@@ -207,7 +208,7 @@ class hero:
 
         def __init__(self, plyer):
             self.myPlayer = plyer
-            self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\Sobek.png")
+            self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\Ra.png")
             self.image = crop_points(self.image, [9, 165, 309, 465])
             self.myPlayer.s.maxHP = self.maxHP
             self.myPlayer.s.currentHP = self.myPlayer.s.maxHP
@@ -247,5 +248,6 @@ class hero:
     def __init__(self, heroName: str, player):
         self.heroName = heroName
         self.heroObject = {
-            "Sobek": self.Sobek(player)
+            "Sobek": self.Sobek(player),
+            "Ra": self.Ra(player)
         }.get(heroName)

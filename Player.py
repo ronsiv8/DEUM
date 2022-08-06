@@ -135,11 +135,12 @@ class hero:
         def a1(self, target: player):
             target.TakeDamage(100 * self.myPlayer.s.DamageDealtMultiplier)
             if "bleed" not in target.s.statusEffects:
-                target.s.statusEffects["bleed"] = 0
+                target.s.statusEffects["bleed"] = {}
+                target.s.statusEffects["bleed"]['amount'] = 0
             target.s.statusEffects[
-                'bleed'] += 100 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
-            target.s.statusEffects['bleed'] *= 2
-            target.s.statusEffects['bleedTimer'] = 2
+                'bleed']['amount'] += 100 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
+            target.s.statusEffects['bleed']['amount'] *= 2
+            target.s.statusEffects['bleed']['bleedTimer'] = 2
             return {"damageDealt": 100 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
                 , "target": target.member.display_name, "bleed": target.s.statusEffects['bleed']}
 
@@ -166,11 +167,12 @@ class hero:
             if "bleed" in target.s.statusEffects:
                 dmgmult = 2
             else:
-                target.s.statusEffects['bleed'] = 0
+                target.s.statusEffects['bleed'] = {}
+                target.s.statusEffects['bleed']['amount'] = 0
             target.TakeDamage(200 * dmgmult)
             target.s.statusEffects[
-                'bleed'] += 200 * target.s.DamageTakenMultiplier * dmgmult * self.myPlayer.s.DamageDealtMultiplier
-            target.s.statusEffects['bleedTimer'] = 2
+                'bleed']['amount'] += 200 * target.s.DamageTakenMultiplier * dmgmult * self.myPlayer.s.DamageDealtMultiplier
+            target.s.statusEffects['amount']['bleedTimer'] = 2
             if dmgmult == 2:
                 return {
                     "damageDealt": 200 * target.s.DamageTakenMultiplier * dmgmult * self.myPlayer.s.DamageDealtMultiplier
@@ -213,8 +215,7 @@ class hero:
 
         def __init__(self, plyer):
             self.myPlayer = plyer
-            self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\Ra.png")
-            self.image = crop_points(self.image, [9, 165, 309, 465])
+            self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\Ra_Face.png")
             self.myPlayer.s.maxHP = self.maxHP
             self.myPlayer.s.currentHP = self.myPlayer.s.maxHP
 

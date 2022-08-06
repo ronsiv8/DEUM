@@ -1,6 +1,6 @@
 import discord
 import os
-
+import game
 try:
     from PIL import Image
 except ImportError:
@@ -29,18 +29,20 @@ class event:
     class sunOrb:
         myzone: zone = None
 
-        def __init__(self, Zone: zone):
+        def __init__(self, Zone: zone,Game:game,x:int,y:int):
             pass
-            # self.myzone = Zone
-            # self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\sunOrb.png")
-            # img.paste(Image.open(directoryPath + "/images/dot.png").convert("RGBA")
-            #           , ((location[0] - 1) * 300 + 125, (location[1] - 1) * 300 + 125),
-            #           mask=Image.open(directoryPath + "/images/dot.png").convert("RGBA"))
-            # print("work?")
-            # print(self.image)
+            self.myzone = Zone
+            self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\sunOrb.png")
+            directoryPath = os.path.dirname(os.path.realpath(__file__))
+            img = Image.open(directoryPath + "/games/" + str(Game) + "/map.png")
+            img.paste(Image.open(directoryPath + "/images/dot.png").convert("RGBA")
+                      , ( x * 300 + 125, y * 300 + 125),
+                      mask=Image.open(directoryPath + "/images/dot.png").convert("RGBA"))
+            print("work?")
+            print(self.image)
 
-    def __init__(self, EventName: str, Zone: zone):
+    def __init__(self, EventName: str, Zone: zone,Game:game,x:int,y:int):
         self.eventName = EventName
         self.eventObject = {
-            "sunOrb": self.sunOrb(Zone),
+            "sunOrb": self.sunOrb(Zone,Game,x,y),
         }.get(self.eventName)

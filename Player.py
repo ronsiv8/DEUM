@@ -222,13 +222,13 @@ class hero:
             self.myPlayer.s.currentHP = self.myPlayer.s.maxHP
 
         def p(self):
-            x = random.randint(0, self.myPlayer.myGame.lengthX-1)
-            y = random.randint(0, self.myPlayer.myGame.lengthY-1)
+            x = random.randint(0, self.myPlayer.myGame.lengthX - 1)
+            y = random.randint(0, self.myPlayer.myGame.lengthY - 1)
             print(str(x) + ", " + str(y))
             if self.myPlayer.myGame.zones[x, y].isOccupied():
                 self.p()
             else:
-                newEvent = zone.event("sunOrb", self.myPlayer.myGame.zones[x, y])
+                zone.event("sunOrb", self.myPlayer.myGame.zones[x, y],self.myPlayer.myGame, x, y)
 
         def a1(self, target: player):
             damagedealt = 0

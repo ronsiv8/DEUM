@@ -89,6 +89,11 @@ class Game():
         self.awaitingMoves = turnPlayer.member.id
 
     async def RoundStartFunctions(self):
+        for plyer in self.playerObjects:
+            if plyer.hero.heroName=="Ra":
+                plyer.hero.heroObject.p()
+
+
         pass
 
     async def getNextPlayerTurn(self):

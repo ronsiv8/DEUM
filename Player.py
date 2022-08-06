@@ -41,10 +41,7 @@ class player:
 
     def __init__(self, x, y, member, heroName, myGame, team):
         self.s = S(x, y, team)
-        dict = {
-            "Sobek": hero("Sobek", self),
-        }
-        self.hero = dict[heroName]
+        self.hero = hero(heroName, self)
         self.myGame = myGame
         self.member = member
 
@@ -91,107 +88,16 @@ class player:
                         adjacentPlayers.append(self.myGame.zones[i][j].myPlayer)
         return adjacentPlayers
 
+    async def executeEffects(self, effectName, amount):
+        if effectName == "bleed":
+            self.TakeDamage(amount)
+            return self.hero.heroName.upper() + " bled out and took " + str(amount) + " damage! \n" \
+                                                                                      "Current HP: " + str(
+                self.s.currentHP)
 
 class hero:
     heroName: str
     heroObject = None
-
-    class Sobek:
-        myPlayer: player = None
-        image: Image
-        maxHP: int = 3000
-        coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 10}
-        moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 2, "abilityName": "Bleeding Strike"
-            , "abilityDesc": "Sobek Strikes his enemy, dealing 100 DAMAGE, refreshing BLEED's Duration on the target, "
-                             "and applying BLEED according to damage dealt. After that, DOUBLE the target's BLEED amount.",
-                           "actionLine": "SOBEK Strikes! It deals {damageDealt} to {target}! {target} now BLEEDS for {bleed}!"},
-                    "a2": {"abilityType": "outOfCombat", "maxCooldown": 4, "abilityName": "Hunter's Chase'",
-                           "abilityDesc": "Dash 2 tiles. After that, refresh BLEED's Duration on all enemies in a 3x3 area"}
-            , "a3": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Open Wounds",
-                     "abilityDesc": "Sobek strikes the enemy, dealing 200 DAMAGE, and applying BLEED to the target. If the "
-                                    "target is already BLEEDING, the damage is doubled.",
-                     "actionLine": "SOBEK Opens {target}'s wounds! {target} now BLEEDS for {bleed}! {damageDealt} dealt! "
-                                   "{additionalText}"}
-            , "ult": {"abilityType": "inCombat", "maxCooldown": 10, "abilityName": "Sobek's Rage",
-                      "abilityDesc": "Sobek Strikes the enemy with all of his RAGE, dealing the amount of BLEED stacks on the enemy.",
-                      "actionLine": "SOBEK destroys the enemy with all of his RAGE! It deals {damageDealt} to {target}!"}}
-        playStyle = "Sobek is a well trained fighter, causing enemies to BLEED being his main power source. You have to " \
-                    "play aggressively and cause your enemies to BLEED if you want to win. "
-
-
-        def __init__(self, plyer):
-            self.myPlayer = plyer
-            self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\Sobek.png")
-            self.image = crop_points(self.image, [9, 165, 309, 465])
-            self.myPlayer.s.maxHP = self.maxHP
-            self.myPlayer.s.currentHP = self.myPlayer.s.maxHP
-
-        def a1(self, target: player):
-            target.TakeDamage(100 * self.myPlayer.s.DamageDealtMultiplier)
-            if "bleed" not in target.s.statusEffects:
-                target.s.statusEffects["bleed"] = 0
-            target.s.statusEffects[
-                'bleed'] += 100 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
-            target.s.statusEffects['bleed'] *= 2
-            target.s.statusEffects['bleedTimer'] = 2
-            return {"damageDealt": 100 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
-                , "target": target.member.display_name, "bleed": target.s.statusEffects['bleed']}
-
-        def a2Possible(self, target: player):
-            for i in range(3):
-                for j in range(3):
-                    if self.myPlayer.myGame.zones[i][j].isOccupied() and "bleed" in self.myPlayer.myGame.zones[i][
-                        j].myPlayer.s.statusEffects:
-                        return True
-            return False
-
-        def a2(self, x: int, y: int):
-            if not self.myPlayer.myGame.zones[x][y].isOccupied():
-                self.myPlayer.moveTo(x, y)
-            for i in range(3):
-                for j in range(3):
-                    if self.myPlayer.myGame.zones[i][j].isOccupied() and self.myPlayer.myGame.zones[i][
-                        j].myPlayer.s.team != self.myPlayer.s.team and 'bleed' in self.myPlayer.myGame.zones[i][
-                        j].myPlayer.s.statusEffects:
-                        self.myPlayer.myGame.zones[i][j].myPlayer.s.statusEffects['bleedTimer'] = 2
-
-        def a3(self, target: player):
-            dmgmult = 1
-            if "bleed" in target.s.statusEffects:
-                dmgmult = 2
-            else:
-                target.s.statusEffects['bleed'] = 0
-            target.TakeDamage(200 * dmgmult)
-            target.s.statusEffects[
-                'bleed'] += 200 * target.s.DamageTakenMultiplier * dmgmult * self.myPlayer.s.DamageDealtMultiplier
-            target.s.statusEffects['bleedTimer'] = 2
-            if dmgmult == 2:
-                return {
-                    "damageDealt": 200 * target.s.DamageTakenMultiplier * dmgmult * self.myPlayer.s.DamageDealtMultiplier
-                    , "target": target.member.display_name, "bleed": target.s.statusEffects['bleed'],
-                    "additionalText": "The target was already BLEEDING!"
-                                      " The damage is doubled!"}
-            return {
-                "damageDealt": 200 * target.s.DamageTakenMultiplier * dmgmult * self.myPlayer.s.DamageDealtMultiplier,
-                "target": target.member.display_name, "bleed": target.s.statusEffects['bleed'],
-                "additionalText": "SOBEK didnt fully "
-                                  "utilize his power!"}
-
-        def ult(self, target: player):
-            bonus = 0
-            if "bleed" in target.s.statusEffects:
-                bonus = target.s.statusEffects['bleed']
-                target.TakeDamage(bonus * self.myPlayer.s.DamageDealtMultiplier)
-            return {"damageDealt": bonus * self.myPlayer.s.DamageDealtMultiplier, "target": target.member.display_name}
-
-        myPlayer: player = None
-        image: Image
-        maxHP: int = 3500
-        moveList = {
-            "a1": {"abilityType": "inCombat", "maxCooldown": 1, "abilityName": "coolCrocodileSlamAttacKTechnique",
-                   "abilityDesc": "does big stuff thingies"}, "a2": {"abilityType": "outOfCombat",
-                                                                     "maxCooldown": 3}, "a3": {
-                "abilityType": "inCombat", "maxCooldown": 0}, "ult": {"abilityType": "inCombat", "maxCooldown": 10}}
 
     class Ra:
         myPlayer: player = None
@@ -215,6 +121,7 @@ class hero:
                       "actionLine": "SOBEK destroys the enemy with all of his RAGE! It deals {damageDealt} to {target}!"}}
         playStyle = "Sobek is a well trained fighter, causing enemies to BLEED being his main power source. You have to " \
                     "play aggressively and cause your enemies to BLEED if you want to win. "
+
         def __init__(self, plyer):
             self.myPlayer = plyer
             self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\Sobek.png")
@@ -245,5 +152,97 @@ class hero:
     def __init__(self, heroName: str, player):
         self.heroName = heroName
         self.heroObject = {
-            "Sobek": self.Sobek(player)
+            "Sobek": Sobek(player)
         }.get(heroName)
+        print(id(self.heroObject))
+
+
+class Sobek:
+    myPlayer: player = None
+    image: Image
+    maxHP: int = 3000
+    coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 5}
+    moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 2, "abilityName": "Bleeding Strike"
+        , "abilityDesc": "Sobek Strikes his enemy, dealing 100 DAMAGE, refreshing BLEED's Duration on the target, "
+                         "and applying BLEED according to damage dealt. After that, DOUBLE the target's BLEED amount.",
+                       "actionLine": "SOBEK Strikes! It deals {damageDealt} to {target}! {target} now BLEEDS for {bleed}!"},
+                "a2": {"abilityType": "outOfCombat", "maxCooldown": 4, "abilityName": "Hunter's Chase'",
+                       "abilityDesc": "Dash 2 tiles. After that, refresh BLEED's Duration on all enemies in a 3x3 area"}
+        , "a3": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Open Wounds",
+                 "abilityDesc": "Sobek strikes the enemy, dealing 200 DAMAGE, and applying BLEED to the target. If the "
+                                "target is already BLEEDING, the damage is doubled.",
+                 "actionLine": "SOBEK Opens {target}'s wounds! {target} now BLEEDS for {bleed}! {damageDealt} dealt! "
+                               "{additionalText}"}
+        , "ult": {"abilityType": "inCombat", "maxCooldown": 10, "abilityName": "Sobek's Rage",
+                  "abilityDesc": "Sobek Strikes the enemy with all of his RAGE, dealing the amount of BLEED stacks on the enemy.",
+                  "actionLine": "SOBEK destroys the enemy with all of his RAGE! It deals {damageDealt} to {target}!"}}
+    playStyle = "Sobek is a well trained fighter, causing enemies to BLEED being his main power source. You have to " \
+                "play aggressively and cause your enemies to BLEED if you want to win. "
+
+    def __init__(self, plyer):
+        self.myPlayer = plyer
+        self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\Sobek_Face.png")
+        self.myPlayer.s.maxHP = self.maxHP
+        self.coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 5}
+        self.myPlayer.s.currentHP = self.myPlayer.s.maxHP
+
+    def a1(self, target: player):
+        target.TakeDamage(100 * self.myPlayer.s.DamageDealtMultiplier)
+        if "bleed" not in target.s.statusEffects:
+            target.s.statusEffects["bleed"] = {}
+            target.s.statusEffects["bleed"]["amount"] = 0
+        target.s.statusEffects[
+            'bleed']['amount'] += 100 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
+        target.s.statusEffects['bleed']['amount'] *= 2
+        target.s.statusEffects['bleed']['timer'] = 2
+        return {"damageDealt": 100 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
+            , "target": target.member.display_name, "bleed": target.s.statusEffects['bleed']['amount']}
+
+    def a2Possible(self, target: player):
+        for i in range(3):
+            for j in range(3):
+                if self.myPlayer.myGame.zones[i][j].isOccupied() and "bleed" in self.myPlayer.myGame.zones[i][
+                    j].myPlayer.s.statusEffects:
+                    return True
+        return False
+
+    def a2(self, x: int, y: int):
+        if not self.myPlayer.myGame.zones[x][y].isOccupied():
+            self.myPlayer.moveTo(x, y)
+        for i in range(3):
+            for j in range(3):
+                if self.myPlayer.myGame.zones[i][j].isOccupied() and self.myPlayer.myGame.zones[i][
+                    j].myPlayer.s.team != self.myPlayer.s.team and 'bleed' in self.myPlayer.myGame.zones[i][
+                    j].myPlayer.s.statusEffects:
+                    self.myPlayer.myGame.zones[i][j].myPlayer.s.statusEffects['bleedTimer'] = 2
+
+    def a3(self, target: player):
+        dmgmult = 1
+        if "bleed" in target.s.statusEffects:
+            dmgmult = 2
+        else:
+            target.s.statusEffects['bleed'] = {}
+            target.s.statusEffects["bleed"]["amount"] = 0
+        target.TakeDamage(200 * dmgmult)
+        target.s.statusEffects[
+            'bleed'][
+            'amount'] += 200 * target.s.DamageTakenMultiplier * dmgmult * self.myPlayer.s.DamageDealtMultiplier
+        target.s.statusEffects['bleed']['timer'] = 2
+        if dmgmult == 2:
+            return {
+                "damageDealt": 200 * target.s.DamageTakenMultiplier * dmgmult * self.myPlayer.s.DamageDealtMultiplier
+                , "target": target.member.display_name, "bleed": target.s.statusEffects['bleed']['amount'],
+                "additionalText": "The target was already BLEEDING!"
+                                  " The damage is doubled!"}
+        return {
+            "damageDealt": 200 * target.s.DamageTakenMultiplier * dmgmult * self.myPlayer.s.DamageDealtMultiplier,
+            "target": target.member.display_name, "bleed": target.s.statusEffects['bleed']['amount'],
+            "additionalText": "SOBEK didnt fully "
+                              "utilize his power!"}
+
+    def ult(self, target: player):
+        bonus = 0
+        if "bleed" in target.s.statusEffects:
+            bonus = target.s.statusEffects['bleed']['amount']
+            target.TakeDamage(bonus * self.myPlayer.s.DamageDealtMultiplier)
+        return {"damageDealt": bonus * self.myPlayer.s.DamageDealtMultiplier, "target": target.member.display_name}

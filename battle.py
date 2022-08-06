@@ -48,7 +48,7 @@ class Battle:
         self.battleImage = originalBattleImage.copy()
         heroImage = Image.open(pathOfScript + "\\images\\" + self.attackingTeam.hero.heroName + ".png")
         heroImage = ImageOps.mirror(heroImage)
-        self.battleImage.paste(heroImage, (1500, 700))
+        self.battleImage.paste(heroImage, (1500, 900))
         # draw healthbar
         draw = ImageDraw.Draw(self.battleImage)
 
@@ -137,6 +137,31 @@ class Battle:
         elif self.turn == 1:
             draw.text(xy=(1325, 150), text="ATTACKER MOVE", fill=(255, 255, 255), align="center", anchor="mm",
                       font=font)
+        effects = self.defendingTeam.s.statusEffects
+        effectCount = 0
+        for effect in effects:
+            effectImage = Image.open(pathOfScript + "\\images\\icons\\" + effect + ".png")
+            self.battleImage.paste(effectImage, (500, 1100 + effectCount * 100))
+            draw.text(xy=(500, 1300 + effectCount * 100), text="x" + str(effects[effect]['timer']),
+                      fill=(255, 255, 255), align="center",
+                      anchor="mm", font=font)
+            draw.text(xy=(600, 1300 + effectCount * 100), text=str(effects[effect]['amount']),
+                        fill=(255, 255, 255), align="center",
+                        anchor="mm", font=font)
+            effectCount += 1
+        # attacker effects
+        effects = self.attackingTeam.s.statusEffects
+        effectCount = 0
+        for effect in effects:
+            effectImage = Image.open(pathOfScript + "\\images\\icons\\" + effect + ".png")
+            self.battleImage.paste(effectImage, (2300, 1100 + effectCount * 100))
+            draw.text(xy=(2300, 1300 + effectCount * 100), text="x" + str(effects[effect]['timer']),
+                      fill=(255, 255, 255), align="center",
+                      anchor="mm", font=font)
+            draw.text(xy=(2400, 1300 + effectCount * 100), text=str(effects[effect]['amount']),
+                        fill=(255, 255, 255), align="center",
+                        anchor="mm", font=font)
+            effectCount += 1
         self.battleImage.save(path + "\\Battles\\" + name + "\\battle.png")
         self.battleImagePath = path + "\\Battles\\" + name + "\\battle.png"
         if self.battleMessage is None:
@@ -154,6 +179,10 @@ class Battle:
         self.overallTurns = 1
 
     async def ChooseAbility(self, plyer: player, abilityFunction):
+        if abilityFunction == "nothing":
+            await self.ctx.send(plyer.hero.heroName.upper() + " does nothing! I don't think that's a good idea...",
+                                delete_after=10)
+            return
         ability = getattr(plyer.hero.heroObject, abilityFunction)
         if plyer == self.defendingTeam:
             ability = ability(self.attackingTeam)
@@ -186,11 +215,36 @@ class Battle:
         # apply cooldowns
         for i in self.defendingTeam.hero.heroObject.coolDowns:
             if self.defendingTeam.hero.heroObject.coolDowns[i] > 0:
+                print(i)
                 self.defendingTeam.hero.heroObject.coolDowns[i] -= 1
+        for i in self.attackingTeam.hero.heroObject.coolDowns:
+            if self.attackingTeam.hero.heroObject.coolDowns[i] > 0:
+                print(i)
+                self.attackingTeam.hero.heroObject.coolDowns[i] -= 1
+        # apply effect timers
+        for i in list(self.defendingTeam.s.statusEffects):
+            if self.defendingTeam.s.statusEffects[i]['timer'] > 0:
+                self.defendingTeam.s.statusEffects[i]['timer'] -= 1
+            if self.defendingTeam.s.statusEffects[i]['timer'] == 0:
+                message = await self.defendingTeam.executeEffects(i, self.defendingTeam.s.statusEffects[i]['amount'])
+                await self.generateBattleImage()
+                await self.ctx.send(message, delete_after=5)
+                self.defendingTeam.s.statusEffects.pop(i)
+                await asyncio.sleep(5)
+        for i in list(self.attackingTeam.s.statusEffects):
+            if self.attackingTeam.s.statusEffects[i]['timer'] > 0:
+                self.attackingTeam.s.statusEffects[i]['timer'] -= 1
+            if self.attackingTeam.s.statusEffects[i]['timer'] == 0:
+                message = await self.attackingTeam.executeEffects(i, self.attackingTeam.s.statusEffects[i]['amount'])
+                await self.generateBattleImage()
+                await self.ctx.send(message, delete_after=5)
+                self.attackingTeam.s.statusEffects.pop(i)
+                await asyncio.sleep(5)
         await self.ChooseAbility(self.defendingTeam, self.defenderAbility)
         await asyncio.sleep(10)
         await self.ChooseAbility(self.attackingTeam, self.attackerAbility)
         await asyncio.sleep(10)
+        await self.generateBattleImage()
         self.attackerAbility = None
         self.defenderAbility = None
 

@@ -8,7 +8,7 @@ from game import Game
 
 from Player import player
 from Player import hero
-from PIL import Image
+from PIL import Image, ImageOps
 import json
 import discord
 from discord import Button
@@ -26,6 +26,10 @@ data = json.load(f)
 token = data['token']
 
 bot = discord.Bot()
+
+bloodImage = Image.open(directoryPath + "\\images\\icons\\bleed.png")
+bloodImage = bloodImage.resize((100, 114))
+bloodImage.save(directoryPath + "\\images\\icons\\bleed.png")
 
 
 @bot.event
@@ -267,6 +271,11 @@ async def fightLoop(attackingPlayer: player, defendingPlayer: player, ctx, battl
                     description="This description is pretty long... check it out in the battle image!",
                     value=ability + "," + currentHero.heroObject.moveList[ability]["abilityName"]
                 ))
+        optionsArray.append(discord.SelectOption(
+            label="Do Nothing",
+            description="Do nothing and wait for the next turn",
+            value="nothing"
+        ))
 
         @discord.ui.select(  # the decorator that lets you specify the properties of the select menu
             placeholder="Choose a move!",
@@ -302,21 +311,21 @@ async def fightLoop(attackingPlayer: player, defendingPlayer: player, ctx, battl
                                     choosingMessage=choosingMessage)
 
     if battle.turn == 0:
-        currentHero = attackingPlayer.hero
-        currentPlayer = attackingPlayer
+        currentHero = battle.attackingTeam.hero
+        currentPlayer = battle.getCurrentTurn()
         myView = MyView()
         if choosingMessage is None:
-            choosingMessage = await ctx.send("ATTACKING PLAYER - YOUR MOVE!", view=myView)
+            choosingMessage = await ctx.send(currentPlayer.member.mention + "\nATTACKING PLAYER - YOUR MOVE!", view=myView)
         else:
-            await choosingMessage.edit("ATTACKING PLAYER - YOUR MOVE!", view=myView)
+            await choosingMessage.edit(currentPlayer.member.mention + "\nATTACKING PLAYER - YOUR MOVE!", view=myView)
     else:
-        currentHero = defendingPlayer.hero
-        currentPlayer = defendingPlayer
+        currentHero = battle.defendingTeam.hero
+        currentPlayer = battle.getCurrentTurn()
         myView = MyView()
         if choosingMessage is None:
-            choosingMessage = await ctx.send("DEFENDING PLAYER - YOUR MOVE!", view=myView)
+            choosingMessage = await ctx.send(currentPlayer.member.mention + "\nDEFENDING PLAYER - YOUR MOVE!", view=myView)
         else:
-            await choosingMessage.edit("DEFENDING PLAYER - YOUR MOVE!", view=myView)
+            await choosingMessage.edit(currentPlayer.member.mention + "\nDEFENDING PLAYER - YOUR MOVE!", view=myView)
 
 
 @bot.slash_command(name='set_pos', description='amogus', guild_ids=[756058242781806703])

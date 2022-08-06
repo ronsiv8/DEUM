@@ -3,9 +3,11 @@ import os
 
 from PIL import Image
 
+import zone
 from imageActions import crop_points
 
 import random
+
 
 class S:  # short for status,stores stats
     team: int
@@ -44,7 +46,7 @@ class player:
         self.s = S(x, y, team)
         dict = {
             "Sobek": hero("Sobek", self),
-            "Ra":hero("Ra",self),
+            "Ra": hero("Ra", self),
         }
         self.hero = dict[heroName]
         self.myGame = myGame
@@ -99,6 +101,7 @@ class player:
             return self.hero.heroName.upper() + " bled out and took " + str(amount) + " damage! \n" \
                                                                                       "Current HP: " + str(
                 self.s.currentHP)
+
 
 class hero:
     heroName: str
@@ -190,7 +193,6 @@ class hero:
                 target.TakeDamage(bonus * self.myPlayer.s.DamageDealtMultiplier)
             return {"damageDealt": bonus * self.myPlayer.s.DamageDealtMultiplier, "target": target.member.display_name}
 
-
     class Ra:
         myPlayer: player = None
         image: Image
@@ -199,7 +201,8 @@ class hero:
         SunOrbs: int = 0
         # its just stolen sobek code it needs changing ik ron i can do it next time
         moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Solar Strike"
-            , "abilityDesc": "Ra commands the sun to fire at his enemy, dealing 50 DAMAGE. if Ra has 5 or more SunLight, the beam will deal an additional 150 damage. ",
+            ,
+                           "abilityDesc": "Ra commands the sun to fire at his enemy, dealing 50 DAMAGE. if Ra has 5 or more SunLight, the beam will deal an additional 150 damage. ",
                            "actionLine": "Ra Fires! It deals {damageDealt} to {target}!""{additionalText}"},
                     "a2": {"abilityType": "inCombat", "maxCooldown": 6, "abilityName": "Withdraw",
                            "abilityDesc": "consumes 1 SunLight to end combat. cooldown is reduced by 1 whenever Ra picks a sunOrb"}
@@ -219,13 +222,13 @@ class hero:
             self.myPlayer.s.currentHP = self.myPlayer.s.maxHP
 
         def p(self):
-            x=random.randint(0,self.myPlayer.myGame.lengthX)
-            y=random.randint(0,self.myPlayer.myGame.lengthY)
-            print(str(x)+", "+str(y))
-            #if [self.myPlayer.myGame.zones[x,y].isOccupied():
-
-
-
+            x = random.randint(0, self.myPlayer.myGame.lengthX-1)
+            y = random.randint(0, self.myPlayer.myGame.lengthY-1)
+            print(str(x) + ", " + str(y))
+            if self.myPlayer.myGame.zones[x, y].isOccupied():
+                self.p()
+            else:
+                newEvent = zone.event("sunOrb", self.myPlayer.myGame.zones[x, y])
 
         def a1(self, target: player):
             damagedealt = 0

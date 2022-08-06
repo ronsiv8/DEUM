@@ -74,10 +74,11 @@ class Game():
         self.turnNum += 1
         if self.turnNum == len(self.playerObjects):
             self.turnNum = 0
+            await self.RoundStartFunctions()
         turnPlayer = self.playerObjects[self.turnNum]
         moveableTo = turnPlayer.canMoveTo()
         embed = discord.Embed(title=turnPlayer.hero.heroName + " - " + turnPlayer.member.display_name +
-                                                                        " - YOUR TURN TO ACT!", color=0x8bd402)
+                                    " - YOUR TURN TO ACT!", color=0x8bd402)
         embed.add_field(name="You can move to:", value=moveableTo, inline=False)
         embed.add_field(name="And use moves:", value="usable moves", inline=True)
         if self.actMessage is None:
@@ -86,6 +87,9 @@ class Game():
             return
         await self.actMessage.edit(embed=embed)
         self.awaitingMoves = turnPlayer.member.id
+
+    async def RoundStartFunctions(self):
+        pass
 
     async def getNextPlayerTurn(self):
         if self.turnNum + 1 == len(self.playerObjects):

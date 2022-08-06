@@ -46,9 +46,9 @@ class Battle:
         originalBattleImage = Image.open(pathOfScript + "\\images\\battleBg.jpg")
         # create a new image
         self.battleImage = originalBattleImage.copy()
-        heroImage = Image.open(pathOfScript + "\\images\\" + self.attackingTeam.hero.heroName + ".png")
+        heroImage = Image.open(pathOfScript + "\\images\\" + self.attackingTeam.hero.heroName + ".png").convert("RGBA")
         heroImage = ImageOps.mirror(heroImage)
-        self.battleImage.paste(heroImage, (1500, 900))
+        self.battleImage.paste(heroImage, (1500, 900), heroImage)
         # draw healthbar
         draw = ImageDraw.Draw(self.battleImage)
 
@@ -63,8 +63,8 @@ class Battle:
             draw.ellipse((x + width, y, x + height + width, y + height), fill=fg)
             draw.ellipse((x, y, x + height, y + height), fill=fg)
 
-        heroImage = Image.open(pathOfScript + "\\images\\" + self.defendingTeam.hero.heroName + ".png")
-        self.battleImage.paste(heroImage, (900, 700))
+        heroImage = Image.open(pathOfScript + "\\images\\" + self.defendingTeam.hero.heroName + ".png").convert("RGBA")
+        self.battleImage.paste(heroImage, (900, 700), heroImage)
         # abilities
         nameFont = ImageFont.truetype(pathOfScript + "\\fonts\\arial.ttf", 100)
         progress = max(0, self.defendingTeam.s.currentHP / self.defendingTeam.s.maxHP)

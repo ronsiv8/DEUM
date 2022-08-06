@@ -52,7 +52,7 @@ class Game():
                 playerY = np.random.randint(0, lengthY)
                 if self.zones[playerX][playerY].isOccupied():
                     get_zone()
-                newPlayer = player(playerX, playerY, discordId, "Sobek", self, -1)
+                newPlayer = player(playerX, playerY, discordId, "Ra", self, -1)
                 self.playerObjects.append(newPlayer)
                 self.zones[playerX][playerY].myPlayer = newPlayer
 
@@ -74,11 +74,11 @@ class Game():
         self.turnNum += 1
         if self.turnNum == len(self.playerObjects):
             self.turnNum = 0
-            await self.runStartFunctions()
+            await self.RoundStartFunctions()
         turnPlayer = self.playerObjects[self.turnNum]
         moveableTo = turnPlayer.canMoveTo()
         embed = discord.Embed(title=turnPlayer.hero.heroName + " - " + turnPlayer.member.display_name +
-                                    " - YOUR TURN TO ACT!", color=0x8bd402)
+                                                                        " - YOUR TURN TO ACT!", color=0x8bd402)
         embed.add_field(name="You can move to:", value=moveableTo, inline=False)
         embed.add_field(name="And use moves:", value="usable moves", inline=True)
         if self.actMessage is None:
@@ -88,7 +88,12 @@ class Game():
         await self.actMessage.edit(embed=embed)
         self.awaitingMoves = turnPlayer.member.id
 
-    async def runStartFunctions(self):
+    async def RoundStartFunctions(self):
+        for plyer in self.playerObjects:
+            if plyer.hero.heroName=="Ra":
+                plyer.hero.heroObject.p()
+
+
         pass
 
     async def getNextPlayerTurn(self):

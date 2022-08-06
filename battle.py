@@ -48,7 +48,7 @@ class Battle:
         self.battleImage = originalBattleImage.copy()
         heroImage = Image.open(pathOfScript + "\\images\\" + self.attackingTeam.hero.heroName + ".png").convert("RGBA")
         heroImage = ImageOps.mirror(heroImage)
-        self.battleImage.paste(heroImage, (1500, 800), heroImage)
+        self.battleImage.paste(heroImage, (1500, 900), heroImage)
         # draw healthbar
         draw = ImageDraw.Draw(self.battleImage)
 
@@ -64,7 +64,7 @@ class Battle:
             draw.ellipse((x, y, x + height, y + height), fill=fg)
 
         heroImage = Image.open(pathOfScript + "\\images\\" + self.defendingTeam.hero.heroName + ".png").convert("RGBA")
-        self.battleImage.paste(heroImage, (800, 800), heroImage)
+        self.battleImage.paste(heroImage, (900, 700), heroImage)
         # abilities
         nameFont = ImageFont.truetype(pathOfScript + "\\fonts\\arial.ttf", 100)
         progress = max(0, self.defendingTeam.s.currentHP / self.defendingTeam.s.maxHP)
@@ -153,8 +153,6 @@ class Battle:
         effects = self.attackingTeam.s.statusEffects
         effectCount = 0
         for effect in effects:
-            print(effect)
-            print(effects)
             effectImage = Image.open(pathOfScript + "\\images\\icons\\" + effect + ".png")
             self.battleImage.paste(effectImage, (2300, 1100 + effectCount * 100))
             draw.text(xy=(2300, 1300 + effectCount * 100), text="x" + str(effects[effect]['timer']),

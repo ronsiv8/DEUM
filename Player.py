@@ -190,22 +190,19 @@ class hero:
         maxHP: int = 3500
         SunOrbs: int = 0
         # its just stolen sobek code it needs changing ik ron i can do it next time
-        moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 1, "abilityName": "Bleeding Strike"
-            , "abilityDesc": "Sobek Strikes his enemy, dealing 100 DAMAGE, refreshing BLEED's Duration on the target, "
-                             "and applying BLEED according to damage dealt. After that, DOUBLE the target's BLEED amount.",
-                           "actionLine": "SOBEK Strikes! It deals {damageDealt} to {target}! {target} now BLEEDS for {bleed}!"},
-                    "a2": {"abilityType": "outOfCombat", "maxCooldown": 3, "abilityName": "Hunter's Chase'",
-                           "abilityDesc": "Dash 2 tiles. After that, refresh BLEED's Duration on all enemies in a 3x3 area"}
-            , "a3": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Open Wounds",
-                     "abilityDesc": "Sobek strikes the enemy, dealing 200 DAMAGE, and applying BLEED to the target. If the "
-                                    "target is already BLEEDING, the damage is doubled.",
-                     "actionLine": "SOBEK Opens {target}'s wounds! {target} now BLEEDS for {bleed}! {damageDealt} dealt! "
-                                   "{additionalText}"}
-            , "ult": {"abilityType": "inCombat", "maxCooldown": 10, "abilityName": "Sobek's Rage",
-                      "abilityDesc": "Sobek Strikes the enemy with all of his RAGE, dealing the amount of BLEED stacks on the enemy.",
-                      "actionLine": "SOBEK destroys the enemy with all of his RAGE! It deals {damageDealt} to {target}!"}}
-        playStyle = "Sobek is a well trained fighter, causing enemies to BLEED being his main power source. You have to " \
-                    "play aggressively and cause your enemies to BLEED if you want to win. "
+        moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 1, "abilityName": "Solar Strike"
+            , "abilityDesc": "Ra commands the sun to fire at his enemy, dealing 50 DAMAGE. if Ra has 5 or more SunLight, the beam will deal an additional 150 damage. ",
+                           "actionLine": "Ra Fires! It deals {damageDealt} to {target}!""{additionalText}"},
+                    "a2": {"abilityType": "inOfCombat", "maxCooldown": 6, "abilityName": "Withdraw",
+                           "abilityDesc": "consumes 1 SunLight to end combat. cooldown is reduced by 1 whenever Ra picks a sunOrb"}
+            , "a3": {"abilityType": "inCombat", "maxCooldown": 2, "abilityName": "Advanced Maneuver",
+                     "abilityDesc": "Ra utlizes his full potentional for 1 turn, gaining 1 bonus move range for each stack of his SunLight",
+                     "actionLine": "Ra Spreads wings made from SunLight, gaining {damageDealt} dealt! "}
+            , "ult": {"abilityType": "inCombat", "maxCooldown": 2, "abilityName": "Sun Gods Searing Wrath",
+                      "abilityDesc": "Ra channels the full power of the sun, dealing 1000 damage and healing himself for the damage dealt",
+                      "actionLine": "Ra obliterates {target}! It deals {damageDealt} and heals Ra for {damageDealt}"}}
+        playStyle = "Ra is the Sun God, by collecting sun orbs he can ascend to his full potentional, dealing incredible damage with very strong tools" \
+                    "be sure to collect your orbs before your enemy destroys them to gain power and win the game!"
 
         def __init__(self, plyer):
             self.myPlayer = plyer
@@ -237,12 +234,14 @@ class hero:
 
         def a3(self):
             self.myPlayer.s.movementSpeed += self.SunOrbs
+            return {"damageDealt": self.SunOrbs}
 
         def ult(self, target: player):
             target.TakeDamage(1000 * self.myPlayer.s.DamageDealtMultiplier)
             self.myPlayer.s.currentHP = max(
                 min(self.myPlayer.s.currentHP + 1000 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier,
                     self.myPlayer.s.maxHP), self.myPlayer.s.currentHP)
+            return {"damageDealt": 1000 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier}
 
     def __init__(self, heroName: str, player):
         self.heroName = heroName

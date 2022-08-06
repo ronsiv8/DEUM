@@ -108,7 +108,7 @@ class hero:
         myPlayer: player = None
         image: Image
         maxHP: int = 3000
-        coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 10}
+        coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 5}
         moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 2, "abilityName": "Bleeding Strike"
             , "abilityDesc": "Sobek Strikes his enemy, dealing 100 DAMAGE, refreshing BLEED's Duration on the target, "
                              "and applying BLEED according to damage dealt. After that, DOUBLE the target's BLEED amount.",
@@ -142,7 +142,7 @@ class hero:
             target.s.statusEffects['bleed']['amount'] *= 2
             target.s.statusEffects['bleed']['bleedTimer'] = 2
             return {"damageDealt": 100 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
-                , "target": target.member.display_name, "bleed": target.s.statusEffects['bleed']}
+                , "target": target.member.display_name, "bleed": target.s.statusEffects['bleed']['amount']}
 
         def a2Possible(self, target: player):
             for i in range(3):
@@ -172,23 +172,23 @@ class hero:
             target.TakeDamage(200 * dmgmult)
             target.s.statusEffects[
                 'bleed']['amount'] += 200 * target.s.DamageTakenMultiplier * dmgmult * self.myPlayer.s.DamageDealtMultiplier
-            target.s.statusEffects['amount']['bleedTimer'] = 2
+            target.s.statusEffects['bleed']['bleedTimer'] = 2
             if dmgmult == 2:
                 return {
                     "damageDealt": 200 * target.s.DamageTakenMultiplier * dmgmult * self.myPlayer.s.DamageDealtMultiplier
-                    , "target": target.member.display_name, "bleed": target.s.statusEffects['bleed'],
+                    , "target": target.member.display_name, "bleed": target.s.statusEffects['bleed']['amount'],
                     "additionalText": "The target was already BLEEDING!"
                                       " The damage is doubled!"}
             return {
                 "damageDealt": 200 * target.s.DamageTakenMultiplier * dmgmult * self.myPlayer.s.DamageDealtMultiplier,
-                "target": target.member.display_name, "bleed": target.s.statusEffects['bleed'],
+                "target": target.member.display_name, "bleed": target.s.statusEffects['bleed']['amount'],
                 "additionalText": "SOBEK didnt fully "
                                   "utilize his power!"}
 
         def ult(self, target: player):
             bonus = 0
             if "bleed" in target.s.statusEffects:
-                bonus = target.s.statusEffects['bleed']
+                bonus = target.s.statusEffects['bleed']['amount']
                 target.TakeDamage(bonus * self.myPlayer.s.DamageDealtMultiplier)
             return {"damageDealt": bonus * self.myPlayer.s.DamageDealtMultiplier, "target": target.member.display_name}
 

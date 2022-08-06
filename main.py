@@ -223,12 +223,8 @@ async def moveTo(ctx, *, x: int, y: int):
             return
         userId = interaction.data['custom_id']
         attackPlayer: player = await findPlayerObject(int(userId))
-        battle = Battle(attackPlayer, userPlayer, userPlayer.myGame, ctx)
-        await fightRound(battle, userPlayer.hero)
+        await fightLoop(attackPlayer, userPlayer, ctx)
         await battleMessage.delete()
-        await battle.generateBattleImage()
-        view = MyView()
-        await ctx.send("Choose a move!", view=view)
 
     buttons = []
     for player in adjecentPlayers:
@@ -241,16 +237,24 @@ async def moveTo(ctx, *, x: int, y: int):
     runButton = discord.ui.Button(label="Don't engage", style=discord.ButtonStyle.green)
     view.add_item(runButton)
     battleMessage = await ctx.send(embed=embed, view=view)
-    await userPlayer.myGame.doTurn()
 
 
-async def fightRound(battle, hero):
+async def fightLoop(attackingPlayer: player, defendingPlayer: player, ctx, battle=None, choosingMessage=None):
+    if battle is None:
+        battle: Battle = Battle(attackingPlayer, defendingPlayer, attackingPlayer.myGame, ctx)
+    if battle.battleMessage is None:
+        await battle.generateBattleImage()
+
+    currentHero = battle.attackingTeam.hero
+    currentPlayer = battle.attackingTeam
+
     class MyView(discord.ui.View):
-        currentHero: hero = hero
+        nonlocal currentHero, currentPlayer
         optionsArray = []
         for ability in currentHero.heroObject.moveList:
             try:
-                if currentHero.heroObject.moveList[ability]['abilityType'] != "inCombat":
+                if currentHero.heroObject.moveList[ability]['abilityType'] != "inCombat"  or \
+                        currentHero.heroObject.coolDowns[ability] != 0:
                     continue
                 optionsArray.append(discord.SelectOption(
                     label=currentHero.heroObject.moveList[ability]["abilityName"],
@@ -274,10 +278,45 @@ async def fightRound(battle, hero):
         async def select_callback(self, select,
                                   interaction):  # the function called when the user is done selecting options
             # check if this user is the user that started the interaction
-            if interaction.user.id == ctx.author.id:
-                await interaction.response.send_message(f"selected {str(select.values[0].split(',')[1])}!",
+            nonlocal choosingMessage
+            started = False
+            if battle.getCurrentTurn().member.id == interaction.user.id:
+                started = True
+            if started:
+                await interaction.response.send_message(f"Selected!",
                                                         delete_after=1)
-                await battle.ChooseAbility(await findPlayerObject(ctx.author.id), str(select.values[0].split(',')[0]))
+                if battle.turn == 0:
+                    battle.attackerAbility = select.values[0].split(',')[0]
+                    battle.turn = 1
+                else:
+                    battle.defenderAbility = select.values[0].split(',')[0]
+                    battle.turn = 0
+                if battle.defenderAbility is not None and battle.attackerAbility is not None:
+                    await choosingMessage.delete()
+                    choosingMessage = None
+                    await battle.executeCombat()
+                    await fightLoop(battle.attackingTeam, battle.defendingTeam, ctx, battle=battle,
+                                    choosingMessage=choosingMessage)
+                else:
+                    await fightLoop(battle.attackingTeam, battle.defendingTeam, ctx, battle=battle,
+                                    choosingMessage=choosingMessage)
+
+    if battle.turn == 0:
+        currentHero = attackingPlayer.hero
+        currentPlayer = attackingPlayer
+        myView = MyView()
+        if choosingMessage is None:
+            choosingMessage = await ctx.send("ATTACKING PLAYER - YOUR MOVE!", view=myView)
+        else:
+            await choosingMessage.edit("ATTACKING PLAYER - YOUR MOVE!", view=myView)
+    else:
+        currentHero = defendingPlayer.hero
+        currentPlayer = defendingPlayer
+        myView = MyView()
+        if choosingMessage is None:
+            choosingMessage = await ctx.send("DEFENDING PLAYER - YOUR MOVE!", view=myView)
+        else:
+            await choosingMessage.edit("DEFENDING PLAYER - YOUR MOVE!", view=myView)
 
 
 @bot.slash_command(name='set_pos', description='amogus', guild_ids=[756058242781806703])

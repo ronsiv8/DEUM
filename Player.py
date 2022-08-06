@@ -101,11 +101,12 @@ class hero:
         myPlayer: player = None
         image: Image
         maxHP: int = 3000
-        moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 1, "abilityName": "Bleeding Strike"
+        coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 10}
+        moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 2, "abilityName": "Bleeding Strike"
             , "abilityDesc": "Sobek Strikes his enemy, dealing 100 DAMAGE, refreshing BLEED's Duration on the target, "
                              "and applying BLEED according to damage dealt. After that, DOUBLE the target's BLEED amount.",
                            "actionLine": "SOBEK Strikes! It deals {damageDealt} to {target}! {target} now BLEEDS for {bleed}!"},
-                    "a2": {"abilityType": "outOfCombat", "maxCooldown": 3, "abilityName": "Hunter's Chase'",
+                    "a2": {"abilityType": "outOfCombat", "maxCooldown": 4, "abilityName": "Hunter's Chase'",
                            "abilityDesc": "Dash 2 tiles. After that, refresh BLEED's Duration on all enemies in a 3x3 area"}
             , "a3": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Open Wounds",
                      "abilityDesc": "Sobek strikes the enemy, dealing 200 DAMAGE, and applying BLEED to the target. If the "

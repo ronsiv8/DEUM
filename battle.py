@@ -1,3 +1,4 @@
+import asyncio
 import os
 import random
 import textwrap
@@ -80,12 +81,19 @@ class Battle:
         for i in heroAbilities:
             if heroAbilities[i]['abilityType'] != "inCombat":
                 continue
-            draw.text(xy=(50, 200 + count * 350), text=heroAbilities[i]['abilityName'], fill=(255, 255, 255),
-                      align="left", font=abilityNameFont)
+            coolDown = self.defendingTeam.hero.heroObject.coolDowns[i]
+            if coolDown > 0:
+                draw.text(xy=(50, 200 + count * 350), text=heroAbilities[i]['abilityName'] + " / " + str(coolDown),
+                          fill=(255, 255, 255),
+                          align="left", font=abilityNameFont)
+            else:
+                draw.text(xy=(50, 200 + count * 350), text=heroAbilities[i]['abilityName'], fill=(255, 255, 255),
+                          align="left", font=abilityNameFont)
             wrap = textwrap.wrap(heroAbilities[i]['abilityDesc'], width=40)
             yheight = 0
             for j in wrap:
-                draw.text(xy=(50, 275 + count * 350 + yheight * 50), text=j, fill=(255, 255, 255), align="left", font=abilityDescriptionFont)
+                draw.text(xy=(50, 275 + count * 350 + yheight * 50), text=j, fill=(255, 255, 255), align="left",
+                          font=abilityDescriptionFont)
                 yheight += 1
             count += 1
         # attacker abilities
@@ -93,10 +101,10 @@ class Battle:
         progress = max(0, self.attackingTeam.s.currentHP / self.attackingTeam.s.maxHP)
         new_bar(2550 - nameFont.getsize(self.attackingTeam.hero.heroName.upper())[0] * 2, 75, 300, 50, progress)
         draw.text(xy=(2600, 50), text=self.attackingTeam.hero.heroName.upper(),
-                    fill=(255, 255, 255), anchor="ra", font=nameFont)
+                  fill=(255, 255, 255), anchor="ra", font=nameFont)
         nameFont = ImageFont.truetype(pathOfScript + "\\fonts\\arial.ttf", 60)
         draw.text(xy=(2600, 150), text=self.attackingTeam.member.display_name, fill=(255, 255, 255), anchor="ra",
-                font=nameFont)
+                  font=nameFont)
         heroAbilities = self.attackingTeam.hero.heroObject.moveList
         abilityNameFont = ImageFont.truetype(pathOfScript + "\\fonts\\arial.ttf", 75)
         abilityDescriptionFont = ImageFont.truetype(pathOfScript + "\\fonts\\arial.ttf", 50)
@@ -104,12 +112,19 @@ class Battle:
         for i in heroAbilities:
             if heroAbilities[i]['abilityType'] != "inCombat":
                 continue
-            draw.text(xy=(2600, 200 + count * 350), text=heroAbilities[i]['abilityName'], fill=(255, 255, 255),
-                    anchor="ra", font=abilityNameFont)
+            coolDown = self.attackingTeam.hero.heroObject.coolDowns[i]
+            if coolDown > 0:
+                draw.text(xy=(2600, 200 + count * 350), text=heroAbilities[i]['abilityName'] + " / " + str(coolDown),
+                          fill=(255, 255, 255),
+                          anchor="ra", font=abilityNameFont)
+            else:
+                draw.text(xy=(2600, 200 + count * 350), text=heroAbilities[i]['abilityName'], fill=(255, 255, 255),
+                          anchor="ra", font=abilityNameFont)
             wrap = textwrap.wrap(heroAbilities[i]['abilityDesc'], width=50)
             yheight = 0
             for j in wrap:
-                draw.text(xy=(2600, 275 + count * 350 + yheight * 50), text=j, fill=(255, 255, 255), anchor="ra", font=abilityDescriptionFont)
+                draw.text(xy=(2600, 275 + count * 350 + yheight * 50), text=j, fill=(255, 255, 255), anchor="ra",
+                          font=abilityDescriptionFont)
                 yheight += 1
             count += 1
         font = ImageFont.truetype(pathOfScript + "\\fonts\\arial.ttf", 100)
@@ -117,9 +132,11 @@ class Battle:
                   anchor="mm", font=font)
         font = ImageFont.truetype(pathOfScript + "\\fonts\\arial.ttf", 50)
         if self.turn == 0:
-            draw.text(xy=(1325, 150), text="DEFENDER MOVE", fill=(255, 255, 255), align="center", anchor="mm", font=font)
+            draw.text(xy=(1325, 150), text="DEFENDER MOVE", fill=(255, 255, 255), align="center", anchor="mm",
+                      font=font)
         elif self.turn == 1:
-            draw.text(xy=(1325, 150), text="ATTACKER MOVE", fill=(255, 255, 255), align="center", anchor="mm", font=font)
+            draw.text(xy=(1325, 150), text="ATTACKER MOVE", fill=(255, 255, 255), align="center", anchor="mm",
+                      font=font)
         self.battleImage.save(path + "\\Battles\\" + name + "\\battle.png")
         self.battleImagePath = path + "\\Battles\\" + name + "\\battle.png"
         if self.battleMessage is None:
@@ -132,10 +149,9 @@ class Battle:
         self.defendingTeam = defendingTeam
         self.attackingTeam = attackingTeam
         self.turn = 1  # defender starts
-        self.turnNum = 0
         self.myGame: Game = myGame
         self.ctx = ctx
-        self.overallTurns = 0
+        self.overallTurns = 1
 
     async def ChooseAbility(self, plyer: player, abilityFunction):
         ability = getattr(plyer.hero.heroObject, abilityFunction)
@@ -153,7 +169,7 @@ class Battle:
             for key in ability:
                 finalAbility = finalAbility.replace("{" + key + "}", str(ability[key]))
             finalAbility += "\n HP: " + str(self.attackingTeam.s.currentHP) + "/" + str(self.attackingTeam.s.maxHP)
-            await self.ctx.send(finalAbility, delete_after=5)
+            await self.ctx.send(finalAbility, delete_after=10)
         elif plyer == self.attackingTeam:
             self.turn = 0
             abilityActionLine = self.attackingTeam.hero.heroObject.moveList[abilityFunction]['actionLine']
@@ -161,8 +177,25 @@ class Battle:
             for key in ability:
                 finalAbility = finalAbility.replace("{" + key + "}", str(ability[key]))
             finalAbility += "\n HP: " + str(self.defendingTeam.s.currentHP) + "/" + str(self.defendingTeam.s.maxHP)
-            await self.ctx.send(finalAbility, delete_after=5)
+            await self.ctx.send(finalAbility, delete_after=10)
 
-    def executeCombat(self):
-        self.defenderAbility(self.attackingTeam)
-        self.attackerAbility(self.defendingTeam)
+        plyer.hero.heroObject.coolDowns[abilityFunction] = plyer.hero.heroObject.moveList[abilityFunction][
+            'maxCooldown']
+
+    async def executeCombat(self):
+        # apply cooldowns
+        for i in self.defendingTeam.hero.heroObject.coolDowns:
+            if self.defendingTeam.hero.heroObject.coolDowns[i] > 0:
+                self.defendingTeam.hero.heroObject.coolDowns[i] -= 1
+        await self.ChooseAbility(self.defendingTeam, self.defenderAbility)
+        await asyncio.sleep(10)
+        await self.ChooseAbility(self.attackingTeam, self.attackerAbility)
+        await asyncio.sleep(10)
+        self.attackerAbility = None
+        self.defenderAbility = None
+
+    def getCurrentTurn(self):
+        if self.turn == 0:
+            return self.attackingTeam
+        elif self.turn == 1:
+            return self.defendingTeam

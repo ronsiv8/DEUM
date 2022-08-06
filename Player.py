@@ -5,6 +5,7 @@ from PIL import Image
 
 from imageActions import crop_points
 
+import random
 
 class S:  # short for status,stores stats
     team: int
@@ -117,7 +118,6 @@ class hero:
         playStyle = "Sobek is a well trained fighter, causing enemies to BLEED being his main power source. You have to " \
                     "play aggressively and cause your enemies to BLEED if you want to win. "
 
-
         def __init__(self, plyer):
             self.myPlayer = plyer
             self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\Sobek.png")
@@ -183,14 +183,6 @@ class hero:
                 target.TakeDamage(bonus * self.myPlayer.s.DamageDealtMultiplier)
             return {"damageDealt": bonus * self.myPlayer.s.DamageDealtMultiplier, "target": target.member.display_name}
 
-        myPlayer: player = None
-        image: Image
-        maxHP: int = 3500
-        moveList = {
-            "a1": {"abilityType": "inCombat", "maxCooldown": 1, "abilityName": "coolCrocodileSlamAttacKTechnique",
-                   "abilityDesc": "does big stuff thingies"}, "a2": {"abilityType": "outOfCombat",
-                                                                     "maxCooldown": 3}, "a3": {
-                "abilityType": "inCombat", "maxCooldown": 0}, "ult": {"abilityType": "inCombat", "maxCooldown": 10}}
 
     class Ra:
         myPlayer: player = None
@@ -214,12 +206,22 @@ class hero:
                       "actionLine": "SOBEK destroys the enemy with all of his RAGE! It deals {damageDealt} to {target}!"}}
         playStyle = "Sobek is a well trained fighter, causing enemies to BLEED being his main power source. You have to " \
                     "play aggressively and cause your enemies to BLEED if you want to win. "
+
         def __init__(self, plyer):
             self.myPlayer = plyer
             self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\Sobek.png")
             self.image = crop_points(self.image, [9, 165, 309, 465])
             self.myPlayer.s.maxHP = self.maxHP
             self.myPlayer.s.currentHP = self.myPlayer.s.maxHP
+
+        def p(self):
+            x=random.randint(0,self.myPlayer.myGame.lengthX)
+            y=random.randint(0,self.myPlayer.myGame.lengthY)
+            print(str(x)+", "+str(y))
+            #if [self.myPlayer.myGame.zones[x,y].isOccupied():
+
+
+
 
         def a1(self, target: player):
             damagedealt = 0
@@ -233,7 +235,8 @@ class hero:
         # def a2(self):
         # end combat here no error pls okok thx
 
-        # def a3
+        def a3(self):
+            self.myPlayer.s.movementSpeed += self.SunOrbs
 
         def ult(self, target: player):
             target.TakeDamage(1000 * self.myPlayer.s.DamageDealtMultiplier)

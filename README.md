@@ -14,7 +14,7 @@ Players earn upgrades by traversing the map. Upgrades can be used to upgrade the
 Combat initiates when two players are adjacent to each other and a player decides to attack.
 
 
-### The Characters
+# The Characters
 Each of the characters in DEUM feature completely unique play styles and abilities.
 ### SOBEK
 <img src="https://cdn.discordapp.com/attachments/689041799569866752/1005496103506034769/Sobek_Attack.png" width="350" align="right">

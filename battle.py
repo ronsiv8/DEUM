@@ -24,6 +24,7 @@ class Battle:
     ctx = None
     battleMessage = None
     battleImagePath: str
+    done: bool
 
     async def generateBattleImage(self):
         # init battle image
@@ -146,8 +147,8 @@ class Battle:
                       fill=(255, 255, 255), align="center",
                       anchor="mm", font=font)
             draw.text(xy=(600, 1300 + effectCount * 100), text=str(effects[effect]['amount']),
-                        fill=(255, 255, 255), align="center",
-                        anchor="mm", font=font)
+                      fill=(255, 255, 255), align="center",
+                      anchor="mm", font=font)
             effectCount += 1
         # attacker effects
         effects = self.attackingTeam.s.statusEffects
@@ -159,8 +160,8 @@ class Battle:
                       fill=(255, 255, 255), align="center",
                       anchor="mm", font=font)
             draw.text(xy=(2400, 1300 + effectCount * 100), text=str(effects[effect]['amount']),
-                        fill=(255, 255, 255), align="center",
-                        anchor="mm", font=font)
+                      fill=(255, 255, 255), align="center",
+                      anchor="mm", font=font)
             effectCount += 1
         self.battleImage.save(path + "\\Battles\\" + name + "\\battle.png")
         self.battleImagePath = path + "\\Battles\\" + name + "\\battle.png"
@@ -177,6 +178,7 @@ class Battle:
         self.myGame: Game = myGame
         self.ctx = ctx
         self.overallTurns = 1
+        self.done = False
 
     async def ChooseAbility(self, plyer: player, abilityFunction):
         if abilityFunction == "nothing":
@@ -185,10 +187,9 @@ class Battle:
             return
         ability = getattr(plyer.hero.heroObject, abilityFunction)
         if plyer == self.defendingTeam:
-            ability = ability(self.attackingTeam)
+            ability = await ability(self.attackingTeam)
         else:
-            ability = ability(self.defendingTeam)
-        self.overallTurns += 1
+            ability = await ability(self.defendingTeam)
         await self.generateBattleImage()
         if plyer == self.defendingTeam:
             print(ability)
@@ -241,12 +242,43 @@ class Battle:
                 self.attackingTeam.s.statusEffects.pop(i)
                 await asyncio.sleep(5)
         await self.ChooseAbility(self.defendingTeam, self.defenderAbility)
+        if self.defendingTeam.s.currentHP <= 0:
+            await self.ctx.send(self.attackingTeam.hero.heroName.upper() + " has won the battle!", delete_after=10)
+            await self.leaveBattle()
+            return
+        if self.attackingTeam.s.currentHP <= 0:
+            await self.ctx.send(self.defendingTeam.hero.heroName.upper() + " has won the battle!", delete_after=10)
+            await self.leaveBattle()
+            return
         await asyncio.sleep(10)
         await self.ChooseAbility(self.attackingTeam, self.attackerAbility)
+        if self.defendingTeam.s.currentHP <= 0:
+            await self.ctx.send(self.attackingTeam.hero.heroName.upper() + " has won the battle!", delete_after=10)
+            await self.leaveBattle()
+            return
+        if self.attackingTeam.s.currentHP <= 0:
+            await self.ctx.send(self.defendingTeam.hero.heroName.upper() + " has won the battle!", delete_after=10)
+            await self.leaveBattle()
+            return
         await asyncio.sleep(10)
         await self.generateBattleImage()
+        if self.overallTurns >= self.myGame.battleTurnLimit:
+            await self.ctx.send("The battle ended due the turn limit (" + str(self.myGame.battleTurnLimit) + "!) "
+                                "As the game progresses, so will the turn limit!", delete_after=10)
+            await self.leaveBattle()
+            return
+        self.overallTurns += 1
         self.attackerAbility = None
         self.defenderAbility = None
+
+    async def leaveBattle(self):
+        """
+        Cleanup and return to turn order.
+        :return:
+        """
+        await self.battleMessage.delete()
+        self.done = True
+        await self.attackingTeam.myGame.checkFinishWhole()
 
     def getCurrentTurn(self):
         if self.turn == 0:

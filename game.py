@@ -1,5 +1,6 @@
 import os
 import random
+import shutil
 
 import discord.ext.commands.context
 import numpy as np
@@ -25,6 +26,7 @@ class Game():
     actMessage: discord.Message
     lastActMessage: discord.Message
     directoryPath: str
+    battleTurnLimit = 3
 
     def __init__(self, id, creator, players, ctx, lengthX, lengthY, bot):
         self.id = id
@@ -38,6 +40,7 @@ class Game():
         self.turnNum = 0
         self.mapMessage = None
         self.actMessage = None
+        self.battleTurnLimit = 1
         self.directoryPath = os.path.dirname(os.path.realpath(__file__)) + "\\games\\" + str(self.id)
         # 2d array with length of lengthX and height of lengthY with object zone
         self.zones = np.empty((lengthX, lengthY), dtype=zone)
@@ -78,23 +81,28 @@ class Game():
         turnPlayer = self.playerObjects[self.turnNum]
         moveableTo = turnPlayer.canMoveTo()
         embed = discord.Embed(title=turnPlayer.hero.heroName + " - " + turnPlayer.member.display_name +
-                                                                        " - YOUR TURN TO ACT!", color=0x8bd402)
+                                    " - YOUR TURN TO ACT!", color=0x8bd402)
         embed.add_field(name="You can move to:", value=moveableTo, inline=False)
-        embed.add_field(name="And use moves:", value="usable moves", inline=True)
+        possibleMoves = await turnPlayer.usableOutOfCombatAbilities()
+        text = ""
+        view = discord.ui.View()
+        for move in possibleMoves:
+            moveJson = turnPlayer.hero.heroObject.moveList[move]
+            text += moveJson['abilityName'] + "\n" + moveJson['abilityDesc'] + "\n"
+            abilityButton = discord.ui.Button(label="Use " + moveJson['abilityName'], style=discord.ButtonStyle.green, custom_id=moveJson['abilityName'])
+            view.add_item(abilityButton)
+        embed.add_field(name="And use moves:", value=text, inline=True)
         if self.actMessage is None:
-            self.actMessage = await self.ctx.send(embed=embed)
+            self.actMessage = await self.ctx.send(embed=embed, view=view)
             self.awaitingMoves = turnPlayer.member.id
             return
-        await self.actMessage.edit(embed=embed)
+        await self.actMessage.edit(embed=embed, view=view)
         self.awaitingMoves = turnPlayer.member.id
 
     async def RoundStartFunctions(self):
         for plyer in self.playerObjects:
-            if plyer.hero.heroName=="Ra":
+            if plyer.hero.heroName == "Ra":
                 plyer.hero.heroObject.p()
-
-
-        pass
 
     async def getNextPlayerTurn(self):
         if self.turnNum + 1 == len(self.playerObjects):
@@ -103,3 +111,49 @@ class Game():
 
     async def getCurrentPlayerTurn(self):
         return self.playerObjects[self.turnNum]
+
+    async def checkFinish(self):
+        """
+        Checks if the game is finished, returns result
+        """
+        playersAlive = []
+        for player in self.playerObjects:
+            if player.s.currentHP > 0:
+                playersAlive.append(player)
+            if len(playersAlive) > 1:
+                return False
+        return playersAlive[0]
+
+    async def endGame(self, winner: player):
+        """
+        Ends the game, deletes the game folder and sends a message to the channel
+        """
+        # remove directory with things in it
+        shutil.rmtree(self.directoryPath)
+        await self.ctx.send("VICTORY FOR " + winner.member.display_name + " (" + winner.hero.heroName + ")! THEY HAVE "
+                                                                                                        "SURVIVED DEUM!")
+        # delete all players
+        for player in self.playerObjects:
+            del player
+        self.playerObjects = []
+        await self.actMessage.delete()
+        await self.mapMessage.delete()
+        # delete game
+        del self
+
+    async def checkFinishWhole(self):
+        """
+        Checks if the game is finished and if so ends the game
+        """
+        if await self.checkFinish() is not False:
+            await self.endGame(await self.checkFinish())
+            return True
+        return False
+
+    async def killPlayer(self, player: player):
+        """
+        Kills a player
+        """
+        await self.ctx.send("|FALLEN| " + player.hero.heroName.upper() + " HAS FALLEN! |FALLEN|")
+        # remove player from playerObjects
+        self.playerObjects.remove(player)

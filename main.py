@@ -242,6 +242,9 @@ async def moveTo(ctx, *, x: int, y: int):
 async def fightLoop(attackingPlayer: player, defendingPlayer: player, ctx, battle=None, choosingMessage=None):
     if battle is None:
         battle: Battle = Battle(attackingPlayer, defendingPlayer, attackingPlayer.myGame, ctx)
+    if battle.done:
+        await attackingPlayer.myGame.doTurn()
+        return
     if battle.battleMessage is None:
         await battle.generateBattleImage()
 
@@ -338,12 +341,11 @@ async def setPos(ctx, *, x: int, y: int):
     await ctx.respond(file=discord.File(directoryPath + "\\games\\" + str(userPlayer.myGame.id) + "\\map.png"))
 
 
-@bot.slash_command(name="battletest", description="amogus", guild_ids=[756058242781806703])
-async def battleTest(ctx):
-    bgImage = Image.open(directoryPath + "\\images\\bg.jpg")
-    bgImage = bgImage.resize((2700, 1200))
-    bgImage.save(directoryPath + "\\games\\battleBg.jpg")
-    await ctx.respond(file=discord.File(directoryPath + "\\games\\battleBg.jpg"))
+@bot.slash_command(name='stats', description='notcomplete', guild_ids=[756058242781806703])
+async def stats(ctx):
+    player = await findPlayerObject(ctx.author.id)
+    await ctx.respond(player.PrintStatus())
+
 
 
 bot.run(token)

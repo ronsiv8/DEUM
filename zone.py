@@ -52,6 +52,7 @@ class event:
                 elif plyer.hero.heroObject.SunOrbs<=5:
                     return "Ra has collected a sun orb! the power of the sun is unleashed!"
                 else:
+                    plyer.s.abilityCooldowns[4] = 0
                     return "Ra has collected a sun orb! Ċ̸̨̙̻̻̞̇͐́͝O̶̩̞̬̯̫̣̍W̴̡̳̩̮̍̇͝E̴̬̯̮̒̀͋ͅͅṘ̵͇̦̣̝̟̹̜́̍̆̕"
 
     def __init__(self, EventName: str, Zone: zone, Game: game, x: int, y: int):

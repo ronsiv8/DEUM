@@ -168,10 +168,14 @@ class Battle:
         if self.battleMessage is None:
             self.battleMessage = await self.ctx.send(file=discord.File(self.battleImagePath))
         else:
-            await self.battleMessage.delete()
+            try:
+                await self.battleMessage.delete()
+            except:
+                pass
             self.battleMessage = await self.ctx.send(file=discord.File(self.battleImagePath))
 
     def __init__(self, defendingTeam, attackingTeam, myGame, ctx):
+        self.battleMessage = None
         self.defendingTeam = defendingTeam
         self.attackingTeam = attackingTeam
         self.turn = 1  # defender starts
@@ -186,9 +190,10 @@ class Battle:
                                 delete_after=10)
             return
         ability = getattr(plyer.hero.heroObject, abilityFunction)
+        abilityJson = plyer.hero.heroObject.moveList[abilityFunction]
         if plyer == self.defendingTeam:
             ability = await ability(self.attackingTeam)
-        elif plyer == self.attackingTeam:
+        else:
             ability = await ability(self.defendingTeam)
         await self.generateBattleImage()
         if plyer == self.defendingTeam:
@@ -264,7 +269,8 @@ class Battle:
         await self.generateBattleImage()
         if self.overallTurns >= self.myGame.battleTurnLimit:
             await self.ctx.send("The battle ended due the turn limit (" + str(self.myGame.battleTurnLimit) + "!) "
-                                "As the game progresses, so will the turn limit!", delete_after=10)
+                                                                                                             "As the game progresses, so will the turn limit!",
+                                delete_after=10)
             await self.leaveBattle()
             return
         self.overallTurns += 1

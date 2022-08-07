@@ -59,8 +59,8 @@ class player:
         self.myGame.zones[self.s.posX][self.s.posY].myPlayer = self
 
     async def TakeDamage(self, amount: int):
-        self.s.currentHP -= amount * self.s.DamageTakenMultiplier
-        if self.s.currentHP < 0:
+        self.s.currentHP -= int(amount * self.s.DamageTakenMultiplier)
+        if self.s.currentHP <= 0:
             self.s.currentHP = 0
             self.dead = True
             await self.myGame.killPlayer(self)
@@ -212,22 +212,26 @@ class Ra:
     myPlayer: player = None
     image: Image
     maxHP: int = 3500
-    coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 0}
+    coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 9999}
     SunOrbs: int = 0
-    moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Solar Strike"
-        ,
-                       "abilityDesc": "Ra commands the sun to fire at his enemy, dealing 50 DAMAGE. if Ra has 5 or more SunLight, the beam will deal an additional 150 damage. ",
+    moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Solar Strike",
+                       "abilityDesc": "Ra commands the sun to fire at his enemy, dealing 50 DAMAGE. if Ra has 5 or "
+                                      "more SunLight, the beam will deal an additional 150 damage. ",
                        "actionLine": "Ra Fires! It deals {damageDealt} to {target}!""{additionalText}"},
-                "a2": {"abilityType": "inCombat", "maxCooldown": 6, "abilityName": "Withdraw",
-                       "abilityDesc": "consumes 1 SunLight to end combat. cooldown is reduced by 1 whenever Ra picks a sunOrb"}
+                "a2": {"abilityType": "inCombat", "maxCooldown": 6, "abilityName": "Sun Light's Guard",
+                       "abilityDesc": "Reduces my damage taken by 10 for each stack of Sun Light. cooldown is reduced by 1 whenever Ra picks "
+                                      "a sunMorb",
+                       "actionLine": "the sun surrounds Ra, granting him {amount} damage reduction!"}
         , "a3": {"abilityType": "outOfCombat", "maxCooldown": 2, "abilityName": "Advanced Maneuver",
-                 "abilityDesc": "Ra utlizes his full potentional for 1 turn, gaining 1 bonus move range for each stack of his SunLight",
+                 "abilityDesc": "Ra utlizes his full potentional for 1 turn, gaining 1 bonus move range for each "
+                                "stack of his SunLight",
                  "actionLine": "Ra Spreads wings made from SunLight, gaining {damageDealt} dealt! "}
         , "ult": {"abilityType": "inCombat", "maxCooldown": 2, "abilityName": "Sun Gods Searing Wrath",
-                  "abilityDesc": "Ra channels the full power of the sun, dealing 2000 damage and healing himself for the damage dealt",
+                  "abilityDesc": "Ra channels the full power of the sun, dealing 2000 damage and healing himself for "
+                                 "the damage dealt",
                   "actionLine": "Ra obliterates {target}! It deals {damageDealt} and heals Ra for {damageDealt}"}}
-    playStyle = "Ra is the Sun God, by collecting sun orbs he can ascend to his full potentional, dealing incredible damage with very strong tools" \
-                "be sure to collect your orbs before your enemy destroys them to gain power and win the game!"
+    playStyle = "Ra is the Sun God, by collecting sun orbs he can ascend to his full potentional, dealing incredible " \
+                "damage with very strong tools be sure to collect your orbs before your enemy destroys them to gain power and win the game!"
 
     def __init__(self, plyer):
         self.myPlayer = plyer
@@ -244,18 +248,18 @@ class Ra:
         else:
             zone.event("sunOrb", self.myPlayer.myGame.zones[x, y], self.myPlayer.myGame, x, y)
 
-    def a1(self, target: player):
+    async def a1(self, target: player):
         damagedealt = 0
-        target.TakeDamage(50 * self.myPlayer.s.DamageDealtMultiplier)
+        await target.TakeDamage(50 * self.myPlayer.s.DamageDealtMultiplier)
         damagedealt += 50 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
         if self.SunOrbs >= 5:
-            target.TakeDamage(150 * self.myPlayer.s.DamageDealtMultiplier)
+            await target.TakeDamage(150 * self.myPlayer.s.DamageDealtMultiplier)
             damagedealt += 150 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
-        return {"damageDealt": damagedealt}
+        return {"damageDealt": int(damagedealt)}
 
-    def a2(self,target):
-        target.leaveBattle()
-        return "escaped"
+    async def a2(self, target: player):
+        self.myPlayer.s.DamageTakenMultiplier -= self.SunOrbs * 0.1
+        return {"amount": self.SunOrbs * 10}
 
     def a3Possible(self):
         return self.SunOrbs > 0
@@ -264,12 +268,12 @@ class Ra:
         self.myPlayer.s.movementSpeed += self.SunOrbs
         return {"damageDealt": self.SunOrbs}
 
-    def ult(self, target: player):
-        target.TakeDamage(2000 * self.myPlayer.s.DamageDealtMultiplier)
+    async def ult(self, target: player):
+        await target.TakeDamage(2000 * self.myPlayer.s.DamageDealtMultiplier)
         self.myPlayer.s.currentHP = max(
             min(self.myPlayer.s.currentHP + 2000 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier,
                 self.myPlayer.s.maxHP), self.myPlayer.s.currentHP)
-        return {"damageDealt": 2000 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier}
+        return {"damageDealt": int(2000 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier)}
 
 
 class hero:

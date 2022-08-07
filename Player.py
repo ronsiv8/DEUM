@@ -208,6 +208,100 @@ class Sobek:
         return {"damageDealt": bonus * self.myPlayer.s.DamageDealtMultiplier, "target": target.member.display_name}
 
 
+class Horus:
+    myPlayer: player = None
+    image: Image
+    maxHP: int = 3000
+    SandStacks: int = 1
+    SandSoldierList = None
+    coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 5}
+    moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 2, "abilityName": "Bleeding Strike"
+        , "abilityDesc": "Sobek Strikes his enemy, dealing 100 DAMAGE, refreshing BLEED's Duration on the target, "
+                         "and applying BLEED according to damage dealt. After that, DOUBLE the target's BLEED amount.",
+                       "actionLine": "SOBEK Strikes! It deals {damageDealt} to {target}! {target} now BLEEDS for {bleed}!"},
+                "a2": {"abilityType": "outOfCombat", "maxCooldown": 4, "abilityName": "Hunter's Chase'",
+                       "abilityDesc": "Dash 2 tiles. After that, refresh BLEED's Duration on all enemies in a 3x3 area",
+                       "actionLine": "SOBEK dashes! {target} now BLEEDS for {bleed}!"}
+        , "a3": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Open Wounds",
+                 "abilityDesc": "Sobek strikes the enemy, dealing 200 DAMAGE, and applying BLEED to the target. If the "
+                                "target is already BLEEDING, the damage is doubled.",
+                 "actionLine": "SOBEK Opens {target}'s wounds! {target} now BLEEDS for {bleed}! {damageDealt} dealt! "
+                               "{additionalText}"}
+        , "ult": {"abilityType": "inCombat", "maxCooldown": 10, "abilityName": "Sobek's Rage",
+                  "abilityDesc": "Sobek Strikes the enemy with all of his RAGE, dealing the amount of BLEED stacks on the enemy.",
+                  "actionLine": "SOBEK destroys the enemy with all of his RAGE! It deals {damageDealt} to {target}!"}}
+    playStyle = "Sobek is a well trained fighter, causing enemies to BLEED being his main power source. You have to " \
+                "play aggressively and cause your enemies to BLEED if you want to win. "
+
+    def __init__(self, plyer):
+        self.myPlayer = plyer
+        self.maxHP = 3000
+        self.coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 5}
+        self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\Sobek_Face.png")
+        self.myPlayer.s.maxHP = self.maxHP
+        self.myPlayer.s.currentHP = self.myPlayer.s.maxHP
+        self.SandSoldierList = []
+
+    def p(self, x: int, y: int):
+        if self.myPlayer.myGame.zones[x][y].isOccupied() or self.myPlayer.myGame.zones[x][y].myEvent is not None:
+            x = random.randint(0, self.myPlayer.myGame.lengthX - 1)
+            y = random.randint(0, self.myPlayer.myGame.lengthY - 1)
+            self.p(x, y)
+        else:
+            self.SandSoldierList.append(SandSoldier())
+
+    def a1Possible(self):
+        return self.SandStacks > 0
+
+    async def a1(self):
+        self.SandStacks -= 1
+        for i in range(2):
+            x = random.randint(0, self.myPlayer.myGame.lengthX - 1)
+            y = random.randint(0, self.myPlayer.myGame.lengthY - 1)
+            self.p(x, y)
+
+    def a2(self, target: player):
+        target.s.DamageTakenMultiplier += 0.1
+        self.SandStacks += 1
+
+    def a3Possible(self, target: player):
+        return len(self.SandSoldierList)
+
+    #def a3(self):
+     #sobek dash code
+
+    def ultPossible(self):
+        return len(self.SandSoldierList)
+
+    def ult(self):
+        for soldier in len(self.SandSoldierList):
+            soldier.myPlayer.s.DamageDealtMultiplier += 5
+            soldier.myPlayer.s.maxHP += 1000
+            soldier.myPlayer.s.currentHP += 1000
+
+
+class SandSoldier:
+    myPlayer: player = None
+    image: Image
+    maxHP: int = 500
+    coolDowns = {"a1"}
+    moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Solar Strike",
+                       "abilityDesc": "Ra commands the sun to fire at his enemy, dealing 50 DAMAGE. if Ra has 5 or "
+                                      "more SunLight, the beam will deal an additional 150 damage. ",
+                       "actionLine": "Ra Fires! It deals {damageDealt} to {target}!""{additionalText}"}}
+
+    def __init__(self, plyer):
+        self.myPlayer = plyer
+        self.maxHP = 500
+        self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\Ra_Face.png")
+        self.myPlayer.s.maxHP = self.maxHP
+        self.myPlayer.s.currentHP = self.myPlayer.s.maxHP
+
+    async def a1(self, target: player):
+        await target.TakeDamage(150 * self.myPlayer.s.DamageDealtMultiplier)
+        return 150 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
+
+
 class Ra:
     myPlayer: player = None
     image: Image

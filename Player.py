@@ -228,7 +228,7 @@ class hero:
             if self.myPlayer.myGame.zones[x, y].isOccupied():
                 self.p()
             else:
-                zone.event("sunOrb", self.myPlayer.myGame.zones[x, y],self.myPlayer.myGame, x, y)
+                zone.event("sunOrb", self.myPlayer.myGame.zones[x, y], self.myPlayer.myGame.id, x, y)
 
         def a1(self, target: player):
             damagedealt = 0

@@ -48,7 +48,7 @@ class Battle:
         self.battleImage = originalBattleImage.copy()
         heroImage = Image.open(pathOfScript + "\\images\\" + self.attackingTeam.hero.heroName + ".png").convert("RGBA")
         heroImage = ImageOps.mirror(heroImage)
-        self.battleImage.paste(heroImage, (1500, 900), heroImage)
+        self.battleImage.paste(heroImage, (1500, 750), heroImage)
         # draw healthbar
         draw = ImageDraw.Draw(self.battleImage)
 
@@ -64,7 +64,7 @@ class Battle:
             draw.ellipse((x, y, x + height, y + height), fill=fg)
 
         heroImage = Image.open(pathOfScript + "\\images\\" + self.defendingTeam.hero.heroName + ".png").convert("RGBA")
-        self.battleImage.paste(heroImage, (900, 700), heroImage)
+        self.battleImage.paste(heroImage, (900, 750), heroImage)
         # abilities
         nameFont = ImageFont.truetype(pathOfScript + "\\fonts\\arial.ttf", 100)
         progress = max(0, self.defendingTeam.s.currentHP / self.defendingTeam.s.maxHP)
@@ -142,7 +142,7 @@ class Battle:
         for effect in effects:
             effectImage = Image.open(pathOfScript + "\\images\\icons\\" + effect + ".png")
             self.battleImage.paste(effectImage, (500, 1100 + effectCount * 100))
-            draw.text(xy=(500, 1300 + effectCount * 100), text="x" + str(effects[effect]['timer']),
+            draw.text(xy=(500, 1300 + effectCount * 100), text="x" + str(effects[effect]['bleedTimer']),
                       fill=(255, 255, 255), align="center",
                       anchor="mm", font=font)
             draw.text(xy=(600, 1300 + effectCount * 100), text=str(effects[effect]['amount']),
@@ -155,7 +155,7 @@ class Battle:
         for effect in effects:
             effectImage = Image.open(pathOfScript + "\\images\\icons\\" + effect + ".png")
             self.battleImage.paste(effectImage, (2300, 1100 + effectCount * 100))
-            draw.text(xy=(2300, 1300 + effectCount * 100), text="x" + str(effects[effect]['timer']),
+            draw.text(xy=(2300, 1300 + effectCount * 100), text="x" + str(effects[effect]['bleedTimer']),
                       fill=(255, 255, 255), align="center",
                       anchor="mm", font=font)
             draw.text(xy=(2400, 1300 + effectCount * 100), text=str(effects[effect]['amount']),
@@ -223,18 +223,18 @@ class Battle:
                 self.attackingTeam.hero.heroObject.coolDowns[i] -= 1
         # apply effect timers
         for i in list(self.defendingTeam.s.statusEffects):
-            if self.defendingTeam.s.statusEffects[i]['timer'] > 0:
-                self.defendingTeam.s.statusEffects[i]['timer'] -= 1
-            if self.defendingTeam.s.statusEffects[i]['timer'] == 0:
+            if self.defendingTeam.s.statusEffects[i]['bleedTimer'] > 0:
+                self.defendingTeam.s.statusEffects[i]['bleedTimer'] -= 1
+            if self.defendingTeam.s.statusEffects[i]['bleedTimer'] == 0:
                 message = await self.defendingTeam.executeEffects(i, self.defendingTeam.s.statusEffects[i]['amount'])
                 await self.generateBattleImage()
                 await self.ctx.send(message, delete_after=5)
                 self.defendingTeam.s.statusEffects.pop(i)
                 await asyncio.sleep(5)
         for i in list(self.attackingTeam.s.statusEffects):
-            if self.attackingTeam.s.statusEffects[i]['timer'] > 0:
-                self.attackingTeam.s.statusEffects[i]['timer'] -= 1
-            if self.attackingTeam.s.statusEffects[i]['timer'] == 0:
+            if self.attackingTeam.s.statusEffects[i]['bleedTimer'] > 0:
+                self.attackingTeam.s.statusEffects[i]['bleedTimer'] -= 1
+            if self.attackingTeam.s.statusEffects[i]['bleedTimer'] == 0:
                 message = await self.attackingTeam.executeEffects(i, self.attackingTeam.s.statusEffects[i]['amount'])
                 await self.generateBattleImage()
                 await self.ctx.send(message, delete_after=5)

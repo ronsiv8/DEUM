@@ -27,10 +27,6 @@ token = data['token']
 
 bot = discord.Bot()
 
-bloodImage = Image.open(directoryPath + "\\images\\icons\\bleed.png")
-bloodImage = bloodImage.resize((100, 114))
-bloodImage.save(directoryPath + "\\images\\icons\\bleed.png")
-
 
 @bot.event
 async def on_ready():

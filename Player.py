@@ -215,19 +215,18 @@ class Horus:
     SandStacks: int = 1
     SandSoldierList = None
     coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 5}
-    moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 2, "abilityName": "Bleeding Strike"
-        , "abilityDesc": "Sobek Strikes his enemy, dealing 100 DAMAGE, refreshing BLEED's Duration on the target, "
-                         "and applying BLEED according to damage dealt. After that, DOUBLE the target's BLEED amount.",
+    moveList = {"a1": {"abilityType": "outOfCombat", "maxCooldown": 2, "abilityName": "Arise!"
+        , "abilityDesc": "Horus summons 2 sand soldiers at random areas across the map.",
                        "actionLine": "SOBEK Strikes! It deals {damageDealt} to {target}! {target} now BLEEDS for {bleed}!"},
-                "a2": {"abilityType": "outOfCombat", "maxCooldown": 4, "abilityName": "Hunter's Chase'",
+                "a2": {"abilityType": "inCombat", "maxCooldown": 4, "abilityName": "Hunter's Chase'",
                        "abilityDesc": "Dash 2 tiles. After that, refresh BLEED's Duration on all enemies in a 3x3 area",
                        "actionLine": "SOBEK dashes! {target} now BLEEDS for {bleed}!"}
-        , "a3": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Open Wounds",
+        , "a3": {"abilityType": "outOfCombat", "maxCooldown": 0, "abilityName": "Open Wounds",
                  "abilityDesc": "Sobek strikes the enemy, dealing 200 DAMAGE, and applying BLEED to the target. If the "
                                 "target is already BLEEDING, the damage is doubled.",
                  "actionLine": "SOBEK Opens {target}'s wounds! {target} now BLEEDS for {bleed}! {damageDealt} dealt! "
                                "{additionalText}"}
-        , "ult": {"abilityType": "inCombat", "maxCooldown": 10, "abilityName": "Sobek's Rage",
+        , "ult": {"abilityType": "outOfCombat", "maxCooldown": 10, "abilityName": "Sobek's Rage",
                   "abilityDesc": "Sobek Strikes the enemy with all of his RAGE, dealing the amount of BLEED stacks on the enemy.",
                   "actionLine": "SOBEK destroys the enemy with all of his RAGE! It deals {damageDealt} to {target}!"}}
     playStyle = "Sobek is a well trained fighter, causing enemies to BLEED being his main power source. You have to " \
@@ -237,7 +236,7 @@ class Horus:
         self.myPlayer = plyer
         self.maxHP = 3000
         self.coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 5}
-        self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\Sobek_Face.png")
+        self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\Horus_Face.png")
         self.myPlayer.s.maxHP = self.maxHP
         self.myPlayer.s.currentHP = self.myPlayer.s.maxHP
         self.SandSoldierList = []
@@ -264,14 +263,14 @@ class Horus:
         target.s.DamageTakenMultiplier += 0.1
         self.SandStacks += 1
 
-    def a3Possible(self, target: player):
+    def a3Possible(self):
         return len(self.SandSoldierList)
 
-    #def a3(self):
-     #sobek dash code
+    def a3(self):
+        pass
 
     def ultPossible(self):
-        return len(self.SandSoldierList)
+        return len(self.SandSoldierList)>0
 
     def ult(self):
         for soldier in len(self.SandSoldierList):
@@ -293,7 +292,7 @@ class SandSoldier:
     def __init__(self, plyer):
         self.myPlayer = plyer
         self.maxHP = 500
-        self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\Ra_Face.png")
+        self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\SandSoldier_Face.png")
         self.myPlayer.s.maxHP = self.maxHP
         self.myPlayer.s.currentHP = self.myPlayer.s.maxHP
 
@@ -378,7 +377,8 @@ class hero:
         self.heroName = heroName
         heroObjects = {
             "Sobek": Sobek,
-            "Ra": Ra
+            "Ra": Ra,
+            "Horus": Horus
         }
         self.heroObject = heroObjects[heroName](plyer)
         plyer.s.maxHP = self.heroObject.maxHP

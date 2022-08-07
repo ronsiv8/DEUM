@@ -57,7 +57,7 @@ async def start(ctx):
     embed.add_field(name="Game will start in " + str(timer),
                     value="(It updates every two seconds. Don't worry if it seems stuck!)", inline=True)
     embed.add_field(name="GAME CREATOR - Force start by pressing the FORCE START Button.", value="\u200b", inline=True)
-    embed.add_field(name="AMOUNT OF PLAYERS - " + str(len(users)), value="\u200b", inline=True)
+    embed.add_field(name="AMOUNT OF PLAYERS: " + str(len(users)), value="\u200b", inline=True)
     joinButton = discord.ui.Button(label="JOIN!", style=discord.ButtonStyle.green)
     forceStartButton = discord.ui.Button(label="FORCE START", style=discord.ButtonStyle.red)
     view = discord.ui.View()

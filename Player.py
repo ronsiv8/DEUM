@@ -217,20 +217,17 @@ class Horus:
     coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 5}
     moveList = {"a1": {"abilityType": "outOfCombat", "maxCooldown": 2, "abilityName": "Arise!"
         , "abilityDesc": "Horus summons 2 sand soldiers at random areas across the map.",
-                       "actionLine": "SOBEK Strikes! It deals {damageDealt} to {target}! {target} now BLEEDS for {bleed}!"},
-                "a2": {"abilityType": "inCombat", "maxCooldown": 4, "abilityName": "Hunter's Chase'",
-                       "abilityDesc": "Dash 2 tiles. After that, refresh BLEED's Duration on all enemies in a 3x3 area",
-                       "actionLine": "SOBEK dashes! {target} now BLEEDS for {bleed}!"}
-        , "a3": {"abilityType": "outOfCombat", "maxCooldown": 0, "abilityName": "Open Wounds",
-                 "abilityDesc": "Sobek strikes the enemy, dealing 200 DAMAGE, and applying BLEED to the target. If the "
-                                "target is already BLEEDING, the damage is doubled.",
-                 "actionLine": "SOBEK Opens {target}'s wounds! {target} now BLEEDS for {bleed}! {damageDealt} dealt! "
-                               "{additionalText}"}
-        , "ult": {"abilityType": "outOfCombat", "maxCooldown": 10, "abilityName": "Sobek's Rage",
-                  "abilityDesc": "Sobek Strikes the enemy with all of his RAGE, dealing the amount of BLEED stacks on the enemy.",
-                  "actionLine": "SOBEK destroys the enemy with all of his RAGE! It deals {damageDealt} to {target}!"}}
-    playStyle = "Sobek is a well trained fighter, causing enemies to BLEED being his main power source. You have to " \
-                "play aggressively and cause your enemies to BLEED if you want to win. "
+                       "actionLine": "change this when it works"},
+                "a2": {"abilityType": "inCombat", "maxCooldown": 4, "abilityName": "Conquering Sands",
+                       "abilityDesc": "Horus challenges the enemy, granting him a stack of sand soldiers and increases the damage the enemy takes by 10% permanently!",
+                       "actionLine": "Horus challenged {target}. {target} is Vulnerable!"}
+        , "a3": {"abilityType": "outOfCombat", "maxCooldown": 0, "abilityName": "Shifting Sands",
+                 "abilityDesc": "Horus consumes a stack of his sand soldiers to Dash the amount of sand soldiers on the field. then leaves a sand soldier in his original position!",
+                 "actionLine": "change this when it works"}
+        , "ult": {"abilityType": "outOfCombat", "maxCooldown": 5, "abilityName": "Emperor's Divide",
+                  "abilityDesc": "Horus imbues all current soldiers with power, granting them 5x damage and 1000 bonus max health.",
+                  "actionLine": "change this when it works"}}
+    playStyle = "Horus is the emperor of the sands. Horus summons sand soldiers to find for him, and challenges his opponent to increase his damage. play around your soldiers to control the field and win" \
 
     def __init__(self, plyer):
         self.myPlayer = plyer
@@ -262,6 +259,7 @@ class Horus:
     def a2(self, target: player):
         target.s.DamageTakenMultiplier += 0.1
         self.SandStacks += 1
+        return {"target":target.hero.heroName}
 
     def a3Possible(self):
         return len(self.SandSoldierList)

@@ -103,8 +103,8 @@ async def start(ctx):
     async def forceStart(interaction):
         nonlocal ctx, timer
         if interaction.user.id == ctx.author.id:
-            if timer > 5:
-                timer = 5
+            if timer > 1:
+                timer = 1
                 embed = discord.Embed(title="WELCOME TO DEUM.",
                                       description="A battle arena of the gods where you and your friends are about to verse in!",
                                       color=0xff0000)
@@ -204,6 +204,8 @@ async def moveTo(ctx, *, x: int, y: int):
     nextPlayerMoves = nextPlayerMoves.canMoveTo()
     await IA.add_checks_to_map(nextPlayerMoves, userPlayer.myGame.id, userPlayer.s.posX, userPlayer.s.posY)
     await ctx.respond("Moved!", delete_after=1)
+    if userPlayer.myGame.zones[x-1][y-1].myEvent is not None:
+        await ctx.send(userPlayer.myGame.zones[x-1][y-1].myEvent.eventObject.ActivateEvent(userPlayer),delete_after=10)
     await userPlayer.myGame.mapMessage.delete()
     message = await ctx.send(file=discord.File(directoryPath + "\\games\\" + str(userPlayer.myGame.id) + "\\map.png"))
     userPlayer.myGame.mapMessage = message

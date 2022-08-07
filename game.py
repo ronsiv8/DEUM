@@ -11,7 +11,7 @@ from Player import player
 import imageActions as IA
 
 
-class Game():
+class Game:
     id: int
     creator: int
     players: list[int]
@@ -27,6 +27,7 @@ class Game():
     lastActMessage: discord.Message
     directoryPath: str
     battleTurnLimit = 3
+    zones = None
 
     def __init__(self, id, creator, players, ctx, lengthX, lengthY, bot):
         self.id = id
@@ -55,7 +56,7 @@ class Game():
                 playerY = np.random.randint(0, lengthY)
                 if self.zones[playerX][playerY].isOccupied():
                     get_zone()
-                newPlayer = player(playerX, playerY, discordId, "Sobek", self, -1)
+                newPlayer = player(playerX, playerY, discordId, "Ra", self, -1)
                 self.playerObjects.append(newPlayer)
                 self.zones[playerX][playerY].myPlayer = newPlayer
 
@@ -89,8 +90,11 @@ class Game():
         for move in possibleMoves:
             moveJson = turnPlayer.hero.heroObject.moveList[move]
             text += moveJson['abilityName'] + "\n" + moveJson['abilityDesc'] + "\n"
-            abilityButton = discord.ui.Button(label="Use " + moveJson['abilityName'], style=discord.ButtonStyle.green, custom_id=moveJson['abilityName'])
+            abilityButton = discord.ui.Button(label="Use " + moveJson['abilityName'], style=discord.ButtonStyle.green,
+                                              custom_id=moveJson['abilityName'])
             view.add_item(abilityButton)
+        if text == "":
+            text = "\u200b"
         embed.add_field(name="And use moves:", value=text, inline=True)
         if self.actMessage is None:
             self.actMessage = await self.ctx.send(embed=embed, view=view)

@@ -188,7 +188,7 @@ class Battle:
         ability = getattr(plyer.hero.heroObject, abilityFunction)
         if plyer == self.defendingTeam:
             ability = await ability(self.attackingTeam)
-        else:
+        elif plyer == self.attackingTeam:
             ability = await ability(self.defendingTeam)
         await self.generateBattleImage()
         if plyer == self.defendingTeam:

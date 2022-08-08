@@ -65,11 +65,9 @@ def draw_grid_over_image_with_players(filename, players, input=False):
     font = ImageFont.truetype(directoryPath + "/fonts/arial.ttf", 20)
     for player in players:
         if not input:
-            gridCopy.paste(player.hero.heroObject.image, (player.s.posX * 300, player.s.posY * 300),
-                           mask=player.hero.heroObject.image)
+            gridCopy.paste(player.hero.heroObject.image, (player.s.posX * 300, player.s.posY * 300)) #,mask=player.hero.heroObject.image
         else:
-            gridCopy.paste(player.hero.heroObject.image, (player.s.posX * 300, player.s.posY * 300),
-                           mask=player.hero.heroObject.image)
+            gridCopy.paste(player.hero.heroObject.image, (player.s.posX * 300, player.s.posY * 300))#mask=player.hero.heroObject.image
         effects = player.s.statusEffects
         count = 0
         for effect in effects:

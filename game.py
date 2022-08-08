@@ -1,6 +1,8 @@
+import io
 import os
 import random
 import shutil
+from io import BytesIO
 
 import discord.ext.commands.context
 import numpy as np
@@ -27,6 +29,7 @@ class Game:
     lastActMessage: discord.Message
     directoryPath: str
     battleTurnLimit = 3
+    battle = None
     zones = None
 
     def __init__(self, id, creator, players, ctx, lengthX, lengthY, bot):
@@ -39,6 +42,7 @@ class Game:
         self.bot = bot
         self.awaitingMoves = None
         self.turnNum = 0
+        self.battle = None
         self.mapMessage = None
         self.actMessage = None
         self.battleTurnLimit = 1
@@ -79,10 +83,13 @@ class Game:
             self.turnNum = 0
             await self.RoundStartFunctions()
         turnPlayer = self.playerObjects[self.turnNum]
-        moveableTo = turnPlayer.canMoveTo()
         embed = discord.Embed(title=turnPlayer.hero.heroName + " - " + turnPlayer.member.display_name +
                                     " - YOUR TURN TO ACT!", color=0x8bd402)
-        embed.add_field(name="You can move to:", value=moveableTo, inline=False)
+        embed.add_field(name="You can move to anywhere that has a green dot!", value="Use /move_to to move to "
+                                                                        "your desired location!", inline=False)
+        heroImage = turnPlayer.hero.heroObject.image
+        f = discord.File(heroImage.filename, "hero.png")
+        embed.set_thumbnail(url="attachment://hero.png")
         possibleMoves = await turnPlayer.usableOutOfCombatAbilities()
         text = ""
         view = discord.ui.View()
@@ -109,7 +116,7 @@ class Game:
             self.actMessage = await self.ctx.send(embed=embed, view=view)
             self.awaitingMoves = turnPlayer.member.id
             return
-        await self.actMessage.edit(embed=embed, view=view)
+        await self.actMessage.edit(file=f, embed=embed, view=view)
         self.awaitingMoves = turnPlayer.member.id
 
     async def RoundStartFunctions(self):

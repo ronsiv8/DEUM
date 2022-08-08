@@ -138,6 +138,9 @@ class Battle:
         elif self.turn == 1:
             draw.text(xy=(1325, 150), text="ATTACKER MOVE", fill=(255, 255, 255), align="center", anchor="mm",
                       font=font)
+
+        draw.text(xy=(1325, 250), text="LIM " + str(self.myGame.battleTurnLimit), fill=(255, 255, 255), align="center", anchor="mm",
+                  font=font)
         effects = self.defendingTeam.s.statusEffects
         effectCount = 0
         for effect in effects:
@@ -181,6 +184,7 @@ class Battle:
         self.ctx = ctx
         self.overallTurns = 1
         self.done = False
+        self.myGame.battle = self
 
     async def ChooseAbility(self, plyer: player, abilityFunction):
         if abilityFunction == "nothing":
@@ -285,6 +289,7 @@ class Battle:
         """
         await self.battleMessage.delete()
         self.done = True
+        self.myGame.battle = None
         await self.attackingTeam.myGame.checkFinishWhole()
 
     def getCurrentTurn(self):

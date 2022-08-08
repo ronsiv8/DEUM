@@ -182,6 +182,15 @@ async def findPlayerObject(userId):
     return None
 
 
+async def findCurrentPlayerObject(userId):
+    for player in currentGames:
+        for playerObject in player.playerObjects:
+            if playerObject.member.id == userId and playerObject == await playerObject.myGame.getCurrentPlayerTurn() and \
+                    (playerObject.myGame.awaitingMoves is not None or playerObject.myGame.awaitingMoves == userId):
+                return playerObject
+    return None
+
+
 @bot.slash_command(name='move_to', description='move to x,y', guild_ids=[756058242781806703])
 async def moveTo(ctx, *, x: int, y: int):
     await moveToFunc(ctx, x, y)
@@ -189,13 +198,15 @@ async def moveTo(ctx, *, x: int, y: int):
 
 async def moveToFunc(ctx, x, y):
     await ctx.respond("moving..", delete_after=1)
-    userPlayer: Player.player = await findPlayerObject(ctx.author.id)
+    userPlayer: Player.player = await findCurrentPlayerObject(ctx.author.id)
     if userPlayer is None:
-        await ctx.respond("You are not in a game!")
-        return
-    if userPlayer.myGame.awaitingMoves is None or userPlayer.myGame.awaitingMoves != ctx.author.id:
-        await ctx.respond("It is not your turn!", delete_after=1)
-        return
+        userPlayer = await findPlayerObject(ctx.author.id)
+        if userPlayer is None:
+            await ctx.respond("You are not in a game!")
+            return
+        else:
+            await ctx.respond("It is not your turn!", delete_after=1)
+            return
     if userPlayer.myGame.battle is not None:
         await ctx.respond("Please wait for the battle to end!", delete_after=1)
         return
@@ -273,7 +284,8 @@ async def handleAbilities(player, ctx):
     return False
 
 
-async def fightLoop(attackingPlayer: Player.player, defendingPlayer: Player.player, ctx, battle=None, choosingMessage=None):
+async def fightLoop(attackingPlayer: Player.player, defendingPlayer: Player.player, ctx, battle=None,
+                    choosingMessage=None):
     if battle is None:
         battle: Battle = Battle(attackingPlayer, defendingPlayer, attackingPlayer.myGame, ctx)
     if battle.done:

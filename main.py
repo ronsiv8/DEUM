@@ -191,6 +191,27 @@ async def findCurrentPlayerObject(userId):
     return None
 
 
+@bot.slash_command(name='pass_turn', description='pass your turn, counts as moving in place', guild_ids=[756058242781806703])
+async def pass_turn(ctx):
+    await pass_turnFunc(ctx)
+
+
+async def pass_turnFunc(ctx):
+    userPlayer: Player.player = await findCurrentPlayerObject(ctx.author.id)
+    if userPlayer is None:
+        userPlayer = await findPlayerObject(ctx.author.id)
+        if userPlayer is None:
+            await ctx.respond("You are not in a game!")
+            return
+        else:
+            await ctx.respond("It is not your turn!", delete_after=1)
+            return
+    if userPlayer.myGame.battle is not None:
+        await ctx.respond("Please wait for the battle to end!", delete_after=1)
+        return
+    await moveToFunc(ctx, userPlayer.s.posX, userPlayer.s.posY)
+
+
 @bot.slash_command(name='move_to', description='move to x,y', guild_ids=[756058242781806703])
 async def moveTo(ctx, *, x: int, y: int):
     await moveToFunc(ctx, x, y)

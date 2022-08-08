@@ -84,7 +84,7 @@ class player:
         for i in range(self.s.posX - self.s.movementSpeed, self.s.posX + self.s.movementSpeed + 1):
             for j in range(self.s.posY - self.s.movementSpeed, self.s.posY + self.s.movementSpeed + 1):
                 if 0 <= i < self.myGame.lengthX and 0 <= j < self.myGame.lengthY:
-                    if not zones[i][j].isOccupied():
+                    if not zones[i][j].isOccupied() or zones[i][j].myPlayer == self:
                         canMove.append((i + 1, j + 1))
                     else:
                         if zones[i][j].myPlayer != self:

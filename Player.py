@@ -176,8 +176,7 @@ class Sobek:
     async def a2(self):
         await OCA.doAbility(abilityRequest={"Dash": {"range": 2},
                                             "CauseEffect": {"rangeWidth": 3, "rangeHeight": 3, "effect": "bleed",
-                                            "duration": 2, "amount": None},
-                                            "Dash2": {"range": 2}}
+                                            "duration": 2, "amount": None}}
                             , playerDo=self.myPlayer)
 
     async def a3(self, target: player):

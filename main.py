@@ -198,6 +198,9 @@ async def moveToFunc(ctx, x, y):
     if userPlayer.myGame.awaitingMoves is None or userPlayer.myGame.awaitingMoves != ctx.author.id:
         await ctx.respond("It is not your turn!", delete_after=1)
         return
+    if userPlayer.myGame.battle is not None:
+        await ctx.respond("Please wait for the battle to end!", delete_after=1)
+        return
     possibleMoves = userPlayer.canMoveTo()
     if (x, y) not in possibleMoves:
         await ctx.respond("You can't move there! Moves:" + str(possibleMoves), delete_after=1)

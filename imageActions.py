@@ -52,11 +52,13 @@ def draw_grid_over_image(filename):
 def draw_grid_over_image_with_players(filename, players, input=False):
     directoryPath = os.path.dirname(os.path.realpath(filename))
     scriptPath = os.path.dirname(os.path.realpath(__file__))
-    # get the grid image
-    originalGrid = draw_grid_over_image(filename)
-    # get directory of filename
-    # save to disk where filename directory is
-    originalGrid.savefig(directoryPath + "/grid.png")
+    # check if a grid image already exists
+    if not os.path.exists(directoryPath + "/grid.png"):
+        # get the grid image
+        originalGrid = draw_grid_over_image(filename)
+        # get directory of filename
+        # save to disk where filename directory is
+        originalGrid.savefig(directoryPath + "/grid.png")
     gridOriginal = Image.open(directoryPath + "/grid.png")
     gridCopy = gridOriginal.copy()
     draw = ImageDraw.Draw(gridCopy)

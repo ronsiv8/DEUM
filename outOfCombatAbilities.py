@@ -50,12 +50,11 @@ async def doDash(player, range):
 
 
 async def doEffect(player, rangeWidth, rangeHeight, effect, duration, amount):
-    await player.myGame.mapMessage.delete()
     zones = player.myGame.zones
     conditional = amount is None
     await player.myGame.ctx.send(player.hero.heroName + " Inflicts " + str(effect) + "...", delete_after=3)
-    for i in range(rangeWidth):
-        for j in range(rangeHeight):
+    for i in range(player.s.posX - rangeWidth, player.s.posX + rangeWidth):
+        for j in range(player.s.posY - rangeWidth, player.s.posY + rangeHeight):
             if zones[i][j].isOccupied():
                 if conditional:
                     currentPlayer = zones[i][j].myPlayer
@@ -64,7 +63,8 @@ async def doEffect(player, rangeWidth, rangeHeight, effect, duration, amount):
                     if effect not in currentPlayer.s.statusEffects:
                         return
                     currentPlayer.s.statusEffects[effect][effect + 'Timer'] = duration
-                    await player.myGame.ctx.send(currentPlayer.hero.heroName + " Is feeling the effects of " + effect + "!",
+                    await player.myGame.ctx.send(currentPlayer.hero.heroName + "(" + currentPlayer.member.display_name + ")" \
+                                                                        " Is feeling the effects of " + effect + "!",
                                                  delete_after=3)
                 else:
                     currentPlayer = zones[i][j].myPlayer

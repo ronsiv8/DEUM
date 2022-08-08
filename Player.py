@@ -119,6 +119,16 @@ class player:
                 outOfCombatAbilities.append(ability)
         return outOfCombatAbilities
 
+    async def allOutOfCombatAbilities(self):
+        """
+        Returns an array of all out of combat abilities.
+        """
+        outOfCombatAbilities = []
+        for ability in self.hero.heroObject.moveList:
+            if self.hero.heroObject.moveList[ability]['abilityType'] == "outOfCombat":
+                outOfCombatAbilities.append(ability)
+        return outOfCombatAbilities
+
 
 class Sobek:
     myPlayer: player = None

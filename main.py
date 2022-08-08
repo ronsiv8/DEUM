@@ -319,12 +319,17 @@ async def fightLoop(attackingPlayer: Player.player, defendingPlayer: Player.play
     currentPlayer = battle.attackingTeam
 
     class MyView(discord.ui.View):
-        nonlocal currentHero, currentPlayer
+        nonlocal currentHero, currentPlayer, battle
         optionsArray = []
+
         for ability in currentHero.heroObject.moveList:
+            print(currentHero.heroObject.coolDowns)
+            currentHero = battle.getCurrentTurn()
+            currentHero = currentHero.hero
             try:
                 if currentHero.heroObject.moveList[ability]['abilityType'] != "inCombat" or \
                         currentHero.heroObject.coolDowns[ability] != 0:
+                    print(currentHero.heroObject.coolDowns)
                     continue
                 optionsArray.append(discord.SelectOption(
                     label=currentHero.heroObject.moveList[ability]["abilityName"],

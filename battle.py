@@ -224,33 +224,34 @@ class Battle:
 
     async def executeCombat(self):
         # apply cooldowns
-        for i in self.defendingTeam.hero.heroObject.coolDowns:
-            if self.defendingTeam.hero.heroObject.coolDowns[i] > 0:
-                print(i)
-                self.defendingTeam.hero.heroObject.coolDowns[i] -= 1
-        for i in self.attackingTeam.hero.heroObject.coolDowns:
-            if self.attackingTeam.hero.heroObject.coolDowns[i] > 0:
-                print(i)
-                self.attackingTeam.hero.heroObject.coolDowns[i] -= 1
-        # apply effect timers
-        for i in list(self.defendingTeam.s.statusEffects):
-            if self.defendingTeam.s.statusEffects[i]['bleedTimer'] > 0:
-                self.defendingTeam.s.statusEffects[i]['bleedTimer'] -= 1
-            if self.defendingTeam.s.statusEffects[i]['bleedTimer'] == 0:
-                message = await self.defendingTeam.executeEffects(i, self.defendingTeam.s.statusEffects[i]['amount'])
-                await self.generateBattleImage()
-                await self.ctx.send(message, delete_after=5)
-                self.defendingTeam.s.statusEffects.pop(i)
-                await asyncio.sleep(5)
-        for i in list(self.attackingTeam.s.statusEffects):
-            if self.attackingTeam.s.statusEffects[i]['bleedTimer'] > 0:
-                self.attackingTeam.s.statusEffects[i]['bleedTimer'] -= 1
-            if self.attackingTeam.s.statusEffects[i]['bleedTimer'] == 0:
-                message = await self.attackingTeam.executeEffects(i, self.attackingTeam.s.statusEffects[i]['amount'])
-                await self.generateBattleImage()
-                await self.ctx.send(message, delete_after=5)
-                self.attackingTeam.s.statusEffects.pop(i)
-                await asyncio.sleep(5)
+        if self.overallTurns != self.myGame.battleTurnLimit:
+            for i in self.defendingTeam.hero.heroObject.coolDowns:
+                if self.defendingTeam.hero.heroObject.coolDowns[i] > 0:
+                    print(i)
+                    self.defendingTeam.hero.heroObject.coolDowns[i] -= 1
+            for i in self.attackingTeam.hero.heroObject.coolDowns:
+                if self.attackingTeam.hero.heroObject.coolDowns[i] > 0:
+                    print(i)
+                    self.attackingTeam.hero.heroObject.coolDowns[i] -= 1
+            # apply effect timers
+            for i in list(self.defendingTeam.s.statusEffects):
+                if self.defendingTeam.s.statusEffects[i][i + 'Timer'] > 0:
+                    self.defendingTeam.s.statusEffects[i][i + 'Timer'] -= 1
+                if self.defendingTeam.s.statusEffects[i][i + 'Timer'] == 0:
+                    message = await self.defendingTeam.executeEffects(i, self.defendingTeam.s.statusEffects[i]['amount'])
+                    await self.generateBattleImage()
+                    await self.ctx.send(message, delete_after=5)
+                    self.defendingTeam.s.statusEffects.pop(i)
+                    await asyncio.sleep(5)
+            for i in list(self.attackingTeam.s.statusEffects):
+                if self.attackingTeam.s.statusEffects[i][i + 'Timer'] > 0:
+                    self.attackingTeam.s.statusEffects[i][i + 'Timer'] -= 1
+                if self.attackingTeam.s.statusEffects[i][i + 'Timer'] == 0:
+                    message = await self.attackingTeam.executeEffects(i, self.attackingTeam.s.statusEffects[i]['amount'])
+                    await self.generateBattleImage()
+                    await self.ctx.send(message, delete_after=5)
+                    self.attackingTeam.s.statusEffects.pop(i)
+                    await asyncio.sleep(5)
         await self.ChooseAbility(self.defendingTeam, self.defenderAbility)
         if self.defendingTeam.s.currentHP <= 0:
             await self.ctx.send(self.attackingTeam.hero.heroName.upper() + " has won the battle!", delete_after=10)

@@ -1,3 +1,4 @@
+import asyncio
 import io
 import os
 import random
@@ -59,7 +60,10 @@ class Game:
                 playerY = np.random.randint(0, lengthY)
                 if self.zones[playerX][playerY].isOccupied():
                     get_zone()
-                newPlayer = player(playerX, playerY, discordId, "Horus", self, -1)
+                if discordId.id == 246757653282422795:
+                    newPlayer = player(playerX, playerY, discordId, "Sobek", self, -1)
+                else:
+                    newPlayer = player(playerX, playerY, discordId, "Ra", self, -1)
                 self.playerObjects.append(newPlayer)
                 self.zones[playerX][playerY].myPlayer = newPlayer
 
@@ -86,31 +90,60 @@ class Game:
         embed = discord.Embed(title=turnPlayer.hero.heroName + " - " + turnPlayer.member.display_name +
                                     " - YOUR TURN TO ACT!", color=0x8bd402)
         embed.add_field(name="You can move to anywhere that has a green dot!", value="Use /move_to to move to "
-                                                                        "your desired location!", inline=False)
+                                                                                     "your desired location!",
+                        inline=False)
         heroImage = turnPlayer.hero.heroObject.image
         f = discord.File(heroImage.filename, "hero.png")
         embed.set_thumbnail(url="attachment://hero.png")
+        all = await turnPlayer.allOutOfCombatAbilities()
         possibleMoves = await turnPlayer.usableOutOfCombatAbilities()
         text = ""
         view = discord.ui.View()
+        # apply cooldowns
+        for i in turnPlayer.hero.heroObject.coolDowns:
+            if turnPlayer.hero.heroObject.coolDowns[i] > 0:
+                print(i)
+                turnPlayer.hero.heroObject.coolDowns[i] -= 1
+        # apply effect timers
+        for i in list(turnPlayer.s.statusEffects):
+            if turnPlayer.s.statusEffects[i][i + 'Timer'] > 0:
+                turnPlayer.s.statusEffects[i][i + 'Timer'] -= 1
+            if turnPlayer.s.statusEffects[i][i + 'Timer'] == 0:
+                message = await turnPlayer.executeEffects(i, turnPlayer.s.statusEffects[i]['amount'])
+                await self.ctx.send(message, delete_after=2)
+                turnPlayer.s.statusEffects.pop(i)
+                await asyncio.sleep(2)
 
         async def outOfCombatAbility(interaction):
             if interaction.user.id != turnPlayer.member.id:
                 return
             ability = interaction.data['custom_id']
+            turnPlayer.hero.heroObject.coolDowns[ability] = turnPlayer.hero.heroObject.moveList[ability]['maxCooldown']
             ability = getattr(turnPlayer.hero.heroObject, ability)
             await ability()
 
         for move in possibleMoves:
             moveJson = turnPlayer.hero.heroObject.moveList[move]
-            text += moveJson['abilityName'] + "\n" + moveJson['abilityDesc'] + "\n"
             abilityButton = discord.ui.Button(label="Use " + moveJson['abilityName'], style=discord.ButtonStyle.green,
                                               custom_id=move)
             abilityButton.callback = outOfCombatAbility
             view.add_item(abilityButton)
+
+        for move in all:
+            moveJson = turnPlayer.hero.heroObject.moveList[move]
+            text += moveJson['abilityName'] + "\n" + moveJson['abilityDesc'] + "\n"
         if text == "":
             text = "\u200b"
         embed.add_field(name="And use moves:", value=text, inline=True)
+
+        playerEffects = turnPlayer.s.statusEffects
+        if playerEffects != {}:
+            text = ""
+            for effect in playerEffects:
+                text += effect + " - " + str(playerEffects[effect]['amount']) + " x" + str(
+                    playerEffects[effect][effect + "Timer"]) \
+                        + "\n"
+            embed.add_field(name="You have the following effects:", value=text, inline=True)
 
         if self.actMessage is None:
             self.actMessage = await self.ctx.send(embed=embed, view=view)

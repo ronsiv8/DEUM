@@ -2,11 +2,9 @@ import discord
 import os
 
 from PIL import Image
-import outOfCombatAbilities as OCA
 
 import zone
-from imageActions import crop_points
-
+import imageActions as IA
 import random
 
 
@@ -174,10 +172,11 @@ class Sobek:
         return True
 
     async def a2(self):
-        await OCA.doAbility(abilityRequest={"Dash": {"range": 2},
-                                            "CauseEffect": {"rangeWidth": 3, "rangeHeight": 3, "effect": "bleed",
-                                            "duration": 2, "amount": None}}
-                            , playerDo=self.myPlayer)
+        await doAbility(abilityRequest={"Dash": {"range": 2},
+                                        "CauseEffect": {"rangeWidth": 3, "rangeHeight": 3, "effect": "bleed",
+                                                        "duration": 2, "amount": None},
+                                        "Dash2": {"range": 2}}
+                        , playerDo=self.myPlayer)
 
     async def a3(self, target: player):
         dmgmult = 1
@@ -214,7 +213,7 @@ class Sobek:
 class Horus:
     myPlayer: player = None
     image: Image
-    maxHP: int = 3000
+    maxHP: int = 2000
     SandStacks: int = 1
     SandSoldierList = None
     coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 5}
@@ -230,24 +229,27 @@ class Horus:
         , "ult": {"abilityType": "outOfCombat", "maxCooldown": 5, "abilityName": "Emperor's Divide",
                   "abilityDesc": "Horus imbues all current soldiers with power, granting them 5x damage and 1000 bonus max health.",
                   "actionLine": "change this when it works"}}
-    playStyle = "Horus is the emperor of the sands. Horus summons sand soldiers to find for him, and challenges his opponent to increase his damage. play around your soldiers to control the field and win" \
+    playStyle = "Horus is the emperor of the sands. Horus summons sand soldiers to find for him, and challenges his opponent to increase his damage. play around your soldiers to control the field and win"
 
     def __init__(self, plyer):
         self.myPlayer = plyer
-        self.maxHP = 3000
+        self.maxHP = 2000
         self.coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 5}
         self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\Horus_Face.png")
         self.myPlayer.s.maxHP = self.maxHP
         self.myPlayer.s.currentHP = self.myPlayer.s.maxHP
         self.SandSoldierList = []
 
-    def p(self, x: int, y: int):
+    async def p(self, x: int, y: int):
         if self.myPlayer.myGame.zones[x][y].isOccupied() or self.myPlayer.myGame.zones[x][y].myEvent is not None:
             x = random.randint(0, self.myPlayer.myGame.lengthX - 1)
             y = random.randint(0, self.myPlayer.myGame.lengthY - 1)
-            self.p(x, y)
+            await self.p(x, y)
         else:
-            self.SandSoldierList.append(SandSoldier())
+            print("here")
+            await doAbility(abilityRequest={"Summon": {"hero": SandSoldier,"x":x,"y":y}}, playerDo=self.myPlayer)
+
+            self.SandSoldierList.append(Summon(self.myPlayer, SandSoldier, x, y))
 
     def a1Possible(self):
         return self.SandStacks > 0
@@ -257,12 +259,12 @@ class Horus:
         for i in range(2):
             x = random.randint(0, self.myPlayer.myGame.lengthX - 1)
             y = random.randint(0, self.myPlayer.myGame.lengthY - 1)
-            self.p(x, y)
+            await self.p(x, y)
 
     def a2(self, target: player):
         target.s.DamageTakenMultiplier += 0.1
         self.SandStacks += 1
-        return {"target":target.hero.heroName}
+        return {"target": target.hero.heroName}
 
     def a3Possible(self):
         return len(self.SandSoldierList)
@@ -271,7 +273,7 @@ class Horus:
         pass
 
     def ultPossible(self):
-        return len(self.SandSoldierList)>0
+        return len(self.SandSoldierList) > 0
 
     def ult(self):
         for soldier in len(self.SandSoldierList):
@@ -384,3 +386,89 @@ class hero:
         self.heroObject = heroObjects[heroName](plyer)
         plyer.s.maxHP = self.heroObject.maxHP
         plyer.s.currentHP = self.heroObject.maxHP
+
+
+async def doAbility(abilityRequest: dict, playerDo):
+    """
+    Ability requests are built of a dict that is in order to what the end user needs to do.
+    ability types:
+    Dash (includes range)
+    Cause Effect (includes effect -> REQUIRED, amount, duration (one of these are required, replace the others with None)
+    Damage (Zone, amount)
+    Heal (Zone, amount)
+    :param abilityRequest:
+    :return:
+    """
+    playerDo.doingAbility = True
+    playerDo.savedMove = playerDo.s.movementSpeed
+    if "Dash" in list(abilityRequest.keys())[0]:
+        do = list(abilityRequest.keys())[0]
+        await doDash(playerDo, abilityRequest[do]['range'])
+        abilityRequest.pop(do)
+        playerDo.outOfCombatNext = abilityRequest
+        print(playerDo.outOfCombatNext)
+        msg = False
+    elif "CauseEffect" in list(abilityRequest.keys())[0]:
+        do = list(abilityRequest.keys())[0]
+        await doEffect(playerDo, abilityRequest[do]['rangeWidth'], abilityRequest[do]['rangeHeight'],
+                       abilityRequest[do]['effect'], abilityRequest[do]['duration'], abilityRequest[do]['amount'])
+        abilityRequest.pop(do)
+        playerDo.outOfCombatNext = abilityRequest
+        print(playerDo.outOfCombatNext)
+        msg = True
+    elif "Summon" in list(abilityRequest.keys())[0]:
+        do = list(abilityRequest.keys())[0]
+        Summon(playerDo, do["hero"], do["x"], do["y"])
+        msg = True
+    return msg
+
+
+async def doDash(player, range):
+    # we need to render the map with the ability range
+    player.s.movementSpeed = range
+    await player.myGame.generate_map()
+    possibleMoves = player.canMoveTo()
+    await IA.add_checks_to_map(possibleMoves, player.myGame.id, player.s.posX, player.s.posY, abilityChecks=True)
+    try:
+        await player.myGame.mapMessage.delete()
+    except:
+        # if we can't delete the map message, were probably just executing this dash after another ability, so its fine
+        pass
+    mapMessage = await player.myGame.ctx.send(file=discord.File(player.myGame.directoryPath + "\\map.png"))
+    player.myGame.mapMessage = mapMessage
+    return False
+
+
+async def doEffect(player, rangeWidth, rangeHeight, effect, duration, amount):
+    await player.myGame.mapMessage.delete()
+    zones = player.myGame.zones
+    conditional = amount is None
+    await player.myGame.ctx.send(player.hero.heroName + " Inflicts " + str(effect) + "...", delete_after=3)
+    for i in range(rangeWidth):
+        for j in range(rangeHeight):
+            if zones[i][j].isOccupied():
+                if conditional:
+                    currentPlayer = zones[i][j].myPlayer
+                    if currentPlayer == player:
+                        continue
+                    if effect not in currentPlayer.s.statusEffects:
+                        return
+                    currentPlayer.s.statusEffects[effect][effect + 'Timer'] = duration
+                    await player.myGame.ctx.send(
+                        currentPlayer.hero.heroName + " Is feeling the effects of " + effect + "!",
+                        delete_after=3)
+                else:
+                    currentPlayer = zones[i][j].myPlayer
+                    currentPlayer.s.statusEffects[effect] = {}
+                    currentPlayer.s.statusEffects[effect][effect + 'Timer'] = duration
+                    await player.myGame.ctx.send("Can you feel the " + effect + ", " + player.hero.heroName,
+                                                 delete_after=3)
+    # passive abilities dont generate maps
+
+
+async def Summon(creator: player, Hero: hero, posX: int, posY: int):
+    newPlayer = player(posX, posY, creator.member, creator.myGame, creator.s.team)
+    creator.myGame.playerObjects.append(newPlayer)
+    creator.myGame.zones[posX][posY].myPlayer = newPlayer
+    print(posX,posY)
+    return newPlayer.hero

@@ -63,7 +63,7 @@ class Game:
                 if discordId.id == 246757653282422795:
                     newPlayer = player(playerX, playerY, discordId, "Sobek", self, -1)
                 else:
-                    newPlayer = player(playerX, playerY, discordId, "Ra", self, -1)
+                    newPlayer = player(playerX, playerY, discordId, "Horus", self, -1)
                 self.playerObjects.append(newPlayer)
                 self.zones[playerX][playerY].myPlayer = newPlayer
 

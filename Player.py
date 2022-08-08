@@ -225,9 +225,9 @@ class Horus:
     moveList = {"a1": {"abilityType": "outOfCombat", "maxCooldown": 2, "abilityName": "Arise!"
         , "abilityDesc": "Horus summons 2 sand soldiers at random areas across the map.",
                        "actionLine": "change this when it works"},
-                "a2": {"abilityType": "inCombat", "maxCooldown": 4, "abilityName": "Conquering Sands",
+                "a2": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Conquering Sands",
                        "abilityDesc": "Horus challenges the enemy, granting him a stack of sand soldiers and increases the damage the enemy takes by 10% permanently!",
-                       "actionLine": "Horus challenged {target}. {target} is Vulnerable!"}
+                       "actionLine": "Horus challenged {target}. they are Vulnerable!"}
         , "a3": {"abilityType": "outOfCombat", "maxCooldown": 0, "abilityName": "Shifting Sands",
                  "abilityDesc": "Horus consumes a stack of his sand soldiers to Dash the amount of sand soldiers on the field. then leaves a sand soldier in his original position!",
                  "actionLine": "change this when it works"}
@@ -269,10 +269,11 @@ class Horus:
             y = random.randint(0, self.myPlayer.myGame.lengthY - 1)
             await self.p(x, y)
 
-    def a2(self, target: player):
+    async def a2(self, target: player):
         target.s.DamageTakenMultiplier += 0.1
+        await target.TakeDamage(10 * self.myPlayer.s.DamageDealtMultiplier)
         self.SandStacks += 1
-        return {"target": target.hero.heroName}
+        return {"target": target.member.display_name}
 
     def a3Possible(self):
         return len(self.SandSoldierList) > 0
@@ -294,11 +295,10 @@ class SandSoldier:
     myPlayer: player = None
     image: Image
     maxHP: int = 500
-    coolDowns = {"a1"}
-    moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Solar Strike",
-                       "abilityDesc": "Ra commands the sun to fire at his enemy, dealing 50 DAMAGE. if Ra has 5 or "
-                                      "more SunLight, the beam will deal an additional 150 damage. ",
-                       "actionLine": "Ra Fires! It deals {damageDealt} to {target}!""{additionalText}"}}
+    coolDowns = {"a1": 0}
+    moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Ordered Strike",
+                       "abilityDesc": "Strike the enemy on horus's command, dealing 150 DAMAGE.",
+                       "actionLine": "The sand soldier strikes! It deals {damage} to {target}!"}}
 
     def __init__(self, plyer):
         self.myPlayer = plyer
@@ -309,7 +309,7 @@ class SandSoldier:
 
     async def a1(self, target: player):
         await target.TakeDamage(150 * self.myPlayer.s.DamageDealtMultiplier)
-        return 150 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
+        return {"damage": round(150 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier), "target": target.member.display_name}
 
 
 class Ra:

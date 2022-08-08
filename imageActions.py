@@ -6,7 +6,7 @@ import matplotlib.ticker as plticker
 import numpy as np
 
 try:
-    from PIL import Image
+    from PIL import Image, ImageFont, ImageDraw
 except ImportError:
     import Image
 
@@ -51,6 +51,7 @@ def draw_grid_over_image(filename):
 
 def draw_grid_over_image_with_players(filename, players, input=False):
     directoryPath = os.path.dirname(os.path.realpath(filename))
+    scriptPath = os.path.dirname(os.path.realpath(__file__))
     # get the grid image
     originalGrid = draw_grid_over_image(filename)
     # get directory of filename
@@ -58,6 +59,8 @@ def draw_grid_over_image_with_players(filename, players, input=False):
     originalGrid.savefig(directoryPath + "/grid.png")
     gridOriginal = Image.open(directoryPath + "/grid.png")
     gridCopy = gridOriginal.copy()
+    draw = ImageDraw.Draw(gridCopy)
+    font = ImageFont.truetype(directoryPath + "/fonts/arial.ttf", 20)
     for player in players:
         if not input:
             gridCopy.paste(player.hero.heroObject.image, (player.s.posX * 300, player.s.posY * 300),
@@ -65,6 +68,16 @@ def draw_grid_over_image_with_players(filename, players, input=False):
         else:
             gridCopy.paste(player.hero.heroObject.image, (player.s.posX * 300, player.s.posY * 300),
                            mask=player.hero.heroObject.image)
+        effects = player.s.statusEffects
+        count = 0
+        for effect in effects:
+            # get the image for this effect
+            effectImage = Image.open(scriptPath + "/images/icons/" + effect + ".png")
+            # paste the image above the player
+            gridCopy.paste(effectImage, (player.s.posX * 300 + count * 20, player.s.posY * 300), mask=effectImage)
+            draw.text((player.s.posX * 300 + count * 20, player.s.posY * 250), str(effects[effect]['amount']),
+                      font=font, fill=(255, 255, 255))
+            count += 1
     gridCopy.save(directoryPath + "/map.png")
 
 

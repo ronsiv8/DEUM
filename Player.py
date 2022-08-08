@@ -159,7 +159,7 @@ class Sobek:
         self.myPlayer.s.currentHP = self.myPlayer.s.maxHP
 
     async def a1(self, target: player):
-        await target.TakeDamage(100 * self.myPlayer.s.DamageDealtMultiplier)
+        await target.TakeDamage(round(100 * self.myPlayer.s.DamageDealtMultiplier))
         if "bleed" not in target.s.statusEffects:
             target.s.statusEffects["bleed"] = {}
             target.s.statusEffects["bleed"]['amount'] = 0
@@ -167,7 +167,7 @@ class Sobek:
             'bleed']['amount'] += 100 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
         target.s.statusEffects['bleed']['amount'] *= 2
         target.s.statusEffects['bleed']['bleedTimer'] = 2
-        return {"damageDealt": 100 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
+        return {"damageDealt": 100 * target.s.DamageTakenMultiplier * round(self.myPlayer.s.DamageDealtMultiplier)
             , "target": target.member.display_name, "bleed": target.s.statusEffects['bleed']['amount']}
 
     def a2Possible(self):
@@ -187,6 +187,7 @@ class Sobek:
         else:
             target.s.statusEffects['bleed'] = {}
             target.s.statusEffects['bleed']['amount'] = 0
+            target.s.statusEffects['bleed']['bleedTimer'] = 2
         await target.TakeDamage(200 * dmgmult)
         target.s.statusEffects[
             'bleed']['amount'] += 200 * target.s.DamageTakenMultiplier * dmgmult * self.myPlayer.s.DamageDealtMultiplier
@@ -378,8 +379,9 @@ class hero:
         self.heroName = heroName
         heroObjects = {
             "Sobek": Sobek,
-            "Ra": Ra
+            "Ra": Ra,
+            "Horus": Horus
         }
-        self.heroObject = heroObjects[heroName](player)
-        player.s.maxHP = self.heroObject.maxHP
-        player.s.currentHP = self.heroObject.maxHP
+        self.heroObject = heroObjects[heroName](plyer)
+        plyer.s.maxHP = self.heroObject.maxHP
+        plyer.s.currentHP = self.heroObject.maxHP

@@ -51,12 +51,11 @@ class Game:
                 self.zones[i][j] = zone()
         for discordId in players:
             def get_zone():
-                nonlocal self
                 playerX = np.random.randint(0, lengthX)
                 playerY = np.random.randint(0, lengthY)
                 if self.zones[playerX][playerY].isOccupied():
                     get_zone()
-                newPlayer = player(playerX, playerY, discordId, "Horus", self, -1)
+                newPlayer = player(playerX, playerY, discordId, "Sobek", self, -1)
                 self.playerObjects.append(newPlayer)
                 self.zones[playerX][playerY].myPlayer = newPlayer
 

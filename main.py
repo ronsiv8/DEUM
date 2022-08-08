@@ -6,8 +6,7 @@ import random
 
 from game import Game
 
-from Player import player
-from Player import hero
+import Player
 from PIL import Image, ImageOps
 import json
 import discord
@@ -15,7 +14,6 @@ from discord import Button
 import imageActions as IA
 import databaseActions as DA
 from battle import Battle
-import outOfCombatAbilities as OOCA
 
 currentGames = []
 
@@ -114,7 +112,7 @@ async def start(ctx):
                                 value="(It updates every two seconds. Don't worry if it seems stuck!)", inline=True)
                 embed.add_field(name="GAME CREATOR - Force start by pressing the FORCE START Button.", value="\u200b",
                                 inline=True)
-                embed.add_field(name="AMOUNT OF PLAYERS - " + str(len(users)), value="\u200b", inline=True)
+                embed.add_field(name="AMOUNT OF PLAYERS: " + str(len(users)), value="\u200b", inline=True)
                 await origiMsg.edit(embed=embed)
 
     async def joinButtonCallback(interaction):
@@ -191,7 +189,7 @@ async def moveTo(ctx, *, x: int, y: int):
 
 async def moveToFunc(ctx, x, y):
     await ctx.respond("moving..", delete_after=1)
-    userPlayer: player = await findPlayerObject(ctx.author.id)
+    userPlayer: Player.player = await findPlayerObject(ctx.author.id)
     if userPlayer is None:
         await ctx.respond("You are not in a game!")
         return
@@ -266,13 +264,13 @@ async def handleAbilities(player, ctx):
             file=discord.File(directoryPath + "\\games\\" + str(player.myGame.id) + "\\map.png"))
         player.myGame.mapMessage = message
         return True
-    isPassive = await OOCA.doAbility(player.outOfCombatNext, player)
+    isPassive = await Player.doAbility(player.outOfCombatNext, player)
     if isPassive:
         await handleAbilities(player, ctx)
     return False
 
 
-async def fightLoop(attackingPlayer: player, defendingPlayer: player, ctx, battle=None, choosingMessage=None):
+async def fightLoop(attackingPlayer: Player.player, defendingPlayer: Player.player, ctx, battle=None, choosingMessage=None):
     if battle is None:
         battle: Battle = Battle(attackingPlayer, defendingPlayer, attackingPlayer.myGame, ctx)
     if battle.done:
@@ -365,7 +363,7 @@ async def fightLoop(attackingPlayer: player, defendingPlayer: player, ctx, battl
 @bot.slash_command(name='set_pos', description='amogus', guild_ids=[756058242781806703])
 async def setPos(ctx, *, x: int, y: int):
     await ctx.defer()
-    userPlayer: player = await findPlayerObject(ctx.author.id)
+    userPlayer: Player.player = await findPlayerObject(ctx.author.id)
     if userPlayer is None:
         await ctx.respond("You are not in a game!")
         return

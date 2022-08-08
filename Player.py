@@ -2,6 +2,7 @@ import discord
 import os
 
 from PIL import Image
+import outOfCombatAbilities as OCA
 
 import zone
 from imageActions import crop_points
@@ -25,6 +26,7 @@ class S:  # short for status,stores stats
         self.posX = PosX
         self.posY = PosY
         team = Team
+        self.doingAbility = None
         self.DamageTakenMultiplier = 1
         self.DamageDealtMultiplier = 1
         self.movementSpeed = movementSpeed
@@ -44,12 +46,16 @@ class player:
     member: discord.Member
     hero = None
     myGame = None  # Game, cannot import because of circular dependency
+    outOfCombatNext = None
+    savedMove = None
 
     def __init__(self, x, y, member, heroName, myGame, team):
         self.s = S(x, y, team)
         self.hero = hero(heroName, self)
         self.myGame = myGame
+        self.savedMove = None
         self.member = member
+        self.outOfCombatNext = None
         self.dead = False
 
     def moveTo(self, x, y):
@@ -166,15 +172,12 @@ class Sobek:
     def a2Possible(self):
         return True
 
-    def a2(self, x: int, y: int):
-        if not self.myPlayer.myGame.zones[x][y].isOccupied():
-            self.myPlayer.moveTo(x, y)
-        for i in range(3):
-            for j in range(3):
-                if self.myPlayer.myGame.zones[i][j].isOccupied() and self.myPlayer.myGame.zones[i][
-                    j].myPlayer.s.team != self.myPlayer.s.team and 'bleed' in self.myPlayer.myGame.zones[i][
-                    j].myPlayer.s.statusEffects:
-                    self.myPlayer.myGame.zones[i][j].myPlayer.s.statusEffects['bleedTimer'] = 2
+    async def a2(self):
+        await OCA.doAbility(abilityRequest={"Dash": {"range": 2},
+                                            "CauseEffect": {"rangeWidth": 3, "rangeHeight": 3, "effect": "bleed",
+                                            "duration": 2, "amount": None},
+                                            "Dash2": {"range": 2}}
+                            , playerDo=self.myPlayer)
 
     async def a3(self, target: player):
         dmgmult = 1
@@ -271,67 +274,6 @@ class Ra:
 class hero:
     heroName: str
     heroObject = None
-
-    class Ra:
-        myPlayer: player = None
-        image: Image
-        maxHP: int = 3500
-        coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 0}
-        SunOrbs: int = 0
-        # its just stolen sobek code it needs changing ik ron i can do it next time
-        moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Solar Strike"
-            ,
-                           "abilityDesc": "Ra commands the sun to fire at his enemy, dealing 50 DAMAGE. if Ra has 5 or more SunLight, the beam will deal an additional 150 damage. ",
-                           "actionLine": "Ra Fires! It deals {damageDealt} to {target}!""{additionalText}"},
-                    "a2": {"abilityType": "inCombat", "maxCooldown": 6, "abilityName": "Withdraw",
-                           "abilityDesc": "consumes 1 SunLight to end combat. cooldown is reduced by 1 whenever Ra picks a sunOrb"}
-            , "a3": {"abilityType": "outOfCombat", "maxCooldown": 2, "abilityName": "Advanced Maneuver",
-                     "abilityDesc": "Ra utlizes his full potentional for 1 turn, gaining 1 bonus move range for each stack of his SunLight",
-                     "actionLine": "Ra Spreads wings made from SunLight, gaining {damageDealt} dealt! "}
-            , "ult": {"abilityType": "inCombat", "maxCooldown": 2, "abilityName": "Sun Gods Searing Wrath",
-                      "abilityDesc": "Ra channels the full power of the sun, dealing 2000 damage and healing himself for the damage dealt",
-                      "actionLine": "Ra obliterates {target}! It deals {damageDealt} and heals Ra for {damageDealt}"}}
-        playStyle = "Ra is the Sun God, by collecting sun orbs he can ascend to his full potentional, dealing incredible damage with very strong tools" \
-                    "be sure to collect your orbs before your enemy destroys them to gain power and win the game!"
-
-        def __init__(self, plyer):
-            self.myPlayer = plyer
-            self.maxHP = 3500
-            self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\Ra_Face.png")
-            self.myPlayer.s.maxHP = self.maxHP
-            self.myPlayer.s.currentHP = self.myPlayer.s.maxHP
-
-        def p(self):
-            x = random.randint(0, self.myPlayer.myGame.lengthX - 1)
-            y = random.randint(0, self.myPlayer.myGame.lengthY - 1)
-            print(str(x) + ", " + str(y))
-            if self.myPlayer.myGame.zones[x, y].isOccupied():
-                self.p()
-            else:
-                zone.event("sunOrb", self.myPlayer.myGame.zones[x, y], self.myPlayer.myGame.id, x, y)
-
-        def a1(self, target: player):
-            damagedealt = 0
-            target.TakeDamage(50 * self.myPlayer.s.DamageDealtMultiplier)
-            damagedealt += 50 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
-            if self.SunOrbs >= 5:
-                target.TakeDamage(150 * self.myPlayer.s.DamageDealtMultiplier)
-                damagedealt += 150 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
-            return {"damageDealt": damagedealt}
-
-        # def a2(self):
-        # end combat here no error pls okok thx
-
-        def a3(self):
-            self.myPlayer.s.movementSpeed += self.SunOrbs
-            return {"damageDealt": self.SunOrbs}
-
-        def ult(self, target: player):
-            target.TakeDamage(2000 * self.myPlayer.s.DamageDealtMultiplier)
-            self.myPlayer.s.currentHP = max(
-                min(self.myPlayer.s.currentHP + 2000 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier,
-                    self.myPlayer.s.maxHP), self.myPlayer.s.currentHP)
-            return {"damageDealt": 2000 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier}
 
     def __init__(self, heroName: str, player: player):
         self.heroName = heroName

@@ -15,6 +15,7 @@ from discord import Button
 import imageActions as IA
 import databaseActions as DA
 from battle import Battle
+import outOfCombatAbilities as OOCA
 
 currentGames = []
 
@@ -185,7 +186,11 @@ async def findPlayerObject(userId):
 
 @bot.slash_command(name='move_to', description='move to x,y', guild_ids=[756058242781806703])
 async def moveTo(ctx, *, x: int, y: int):
-    await ctx.defer()
+    await moveToFunc(ctx, x, y)
+
+
+async def moveToFunc(ctx, x, y):
+    await ctx.respond("moving..", delete_after=1)
     userPlayer: player = await findPlayerObject(ctx.author.id)
     if userPlayer is None:
         await ctx.respond("You are not in a game!")
@@ -198,18 +203,26 @@ async def moveTo(ctx, *, x: int, y: int):
         await ctx.respond("You can't move there! Moves:" + str(possibleMoves), delete_after=1)
         return
     userPlayer.moveTo(x - 1, y - 1)
-    await userPlayer.myGame.generate_map()
-    # add checks
-    nextPlayerMoves = await userPlayer.myGame.getNextPlayerTurn()
-    nextPlayerMoves = nextPlayerMoves.canMoveTo()
-    await IA.add_checks_to_map(nextPlayerMoves, userPlayer.myGame.id, userPlayer.s.posX, userPlayer.s.posY)
-    await ctx.respond("Moved!", delete_after=1)
-    await userPlayer.myGame.mapMessage.delete()
-    message = await ctx.send(file=discord.File(directoryPath + "\\games\\" + str(userPlayer.myGame.id) + "\\map.png"))
-    userPlayer.myGame.mapMessage = message
+    if userPlayer.outOfCombatNext is None:
+        await userPlayer.myGame.generate_map()
+        # add checks
+        nextPlayerMoves = await userPlayer.myGame.getNextPlayerTurn()
+        nextPlayerMoves = nextPlayerMoves.canMoveTo()
+        await IA.add_checks_to_map(nextPlayerMoves, userPlayer.myGame.id, userPlayer.s.posX, userPlayer.s.posY)
+        await ctx.send("Moved!", delete_after=1)
+        await userPlayer.myGame.mapMessage.delete()
+        message = await ctx.send(
+            file=discord.File(directoryPath + "\\games\\" + str(userPlayer.myGame.id) + "\\map.png"))
+        userPlayer.myGame.mapMessage = message
+    else:
+        await ctx.send("Moved!", delete_after=1)
+        done = await handleAbilities(userPlayer, ctx)
+        if not done: return
     adjecentPlayers = await userPlayer.adjacentPlayers()
     if not adjecentPlayers:
         await userPlayer.myGame.doTurn()
+        return
+    if userPlayer.outOfCombatNext is not None:
         return
     embed = discord.Embed(title="BATTLE DETECTED!", color=0xff0000)
     embed.add_field(name="The following enemies are close enough for you to engage in combat:", value="(ENEMIES)",
@@ -239,6 +252,26 @@ async def moveTo(ctx, *, x: int, y: int):
     battleMessage = await ctx.send(embed=embed, view=view)
 
 
+async def handleAbilities(player, ctx):
+    if player.outOfCombatNext == {}:
+        player.outOfCombatNext = None
+        player.s.movementSpeed = player.savedMove
+        await player.myGame.generate_map()
+        # add checks
+        nextPlayerMoves = await player.myGame.getNextPlayerTurn()
+        nextPlayerMoves = nextPlayerMoves.canMoveTo()
+        await player.myGame.mapMessage.delete()
+        await IA.add_checks_to_map(nextPlayerMoves, player.myGame.id, player.s.posX, player.s.posY)
+        message = await ctx.send(
+            file=discord.File(directoryPath + "\\games\\" + str(player.myGame.id) + "\\map.png"))
+        player.myGame.mapMessage = message
+        return True
+    isPassive = await OOCA.doAbility(player.outOfCombatNext, player)
+    if isPassive:
+        await handleAbilities(player, ctx)
+    return False
+
+
 async def fightLoop(attackingPlayer: player, defendingPlayer: player, ctx, battle=None, choosingMessage=None):
     if battle is None:
         battle: Battle = Battle(attackingPlayer, defendingPlayer, attackingPlayer.myGame, ctx)
@@ -256,7 +289,7 @@ async def fightLoop(attackingPlayer: player, defendingPlayer: player, ctx, battl
         optionsArray = []
         for ability in currentHero.heroObject.moveList:
             try:
-                if currentHero.heroObject.moveList[ability]['abilityType'] != "inCombat"  or \
+                if currentHero.heroObject.moveList[ability]['abilityType'] != "inCombat" or \
                         currentHero.heroObject.coolDowns[ability] != 0:
                     continue
                 optionsArray.append(discord.SelectOption(
@@ -314,7 +347,8 @@ async def fightLoop(attackingPlayer: player, defendingPlayer: player, ctx, battl
         currentPlayer = battle.getCurrentTurn()
         myView = MyView()
         if choosingMessage is None:
-            choosingMessage = await ctx.send(currentPlayer.member.mention + "\nATTACKING PLAYER - YOUR MOVE!", view=myView)
+            choosingMessage = await ctx.send(currentPlayer.member.mention + "\nATTACKING PLAYER - YOUR MOVE!",
+                                             view=myView)
         else:
             await choosingMessage.edit(currentPlayer.member.mention + "\nATTACKING PLAYER - YOUR MOVE!", view=myView)
     else:
@@ -322,7 +356,8 @@ async def fightLoop(attackingPlayer: player, defendingPlayer: player, ctx, battl
         currentPlayer = battle.getCurrentTurn()
         myView = MyView()
         if choosingMessage is None:
-            choosingMessage = await ctx.send(currentPlayer.member.mention + "\nDEFENDING PLAYER - YOUR MOVE!", view=myView)
+            choosingMessage = await ctx.send(currentPlayer.member.mention + "\nDEFENDING PLAYER - YOUR MOVE!",
+                                             view=myView)
         else:
             await choosingMessage.edit(currentPlayer.member.mention + "\nDEFENDING PLAYER - YOUR MOVE!", view=myView)
 
@@ -345,7 +380,6 @@ async def setPos(ctx, *, x: int, y: int):
 async def stats(ctx):
     player = await findPlayerObject(ctx.author.id)
     await ctx.respond(player.PrintStatus())
-
 
 
 bot.run(token)

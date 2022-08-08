@@ -86,12 +86,25 @@ class Game():
         possibleMoves = await turnPlayer.usableOutOfCombatAbilities()
         text = ""
         view = discord.ui.View()
+
+        async def outOfCombatAbility(interaction):
+            if interaction.user.id != turnPlayer.member.id:
+                return
+            ability = interaction.data['custom_id']
+            ability = getattr(turnPlayer.hero.heroObject, ability)
+            await ability()
+
         for move in possibleMoves:
             moveJson = turnPlayer.hero.heroObject.moveList[move]
             text += moveJson['abilityName'] + "\n" + moveJson['abilityDesc'] + "\n"
-            abilityButton = discord.ui.Button(label="Use " + moveJson['abilityName'], style=discord.ButtonStyle.green, custom_id=moveJson['abilityName'])
+            abilityButton = discord.ui.Button(label="Use " + moveJson['abilityName'], style=discord.ButtonStyle.green,
+                                              custom_id=move)
+            abilityButton.callback = outOfCombatAbility
             view.add_item(abilityButton)
+        if text == "":
+            text = "\u200b"
         embed.add_field(name="And use moves:", value=text, inline=True)
+
         if self.actMessage is None:
             self.actMessage = await self.ctx.send(embed=embed, view=view)
             self.awaitingMoves = turnPlayer.member.id

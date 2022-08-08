@@ -176,6 +176,7 @@ class Battle:
         self.attackingTeam = attackingTeam
         self.turn = 1  # defender starts
         self.myGame: Game = myGame
+        self.battleMessage = None
         self.ctx = ctx
         self.overallTurns = 1
         self.done = False
@@ -186,31 +187,37 @@ class Battle:
                                 delete_after=10)
             return
         ability = getattr(plyer.hero.heroObject, abilityFunction)
-        if plyer == self.defendingTeam:
-            ability = await ability(self.attackingTeam)
-        else:
-            ability = await ability(self.defendingTeam)
-        await self.generateBattleImage()
-        if plyer == self.defendingTeam:
-            print(ability)
-            self.turn = 1
-            abilityActionLine = self.defendingTeam.hero.heroObject.moveList[abilityFunction]['actionLine']
-            finalAbility = abilityActionLine
-            for key in ability:
-                finalAbility = finalAbility.replace("{" + key + "}", str(ability[key]))
-            finalAbility += "\n HP: " + str(self.attackingTeam.s.currentHP) + "/" + str(self.attackingTeam.s.maxHP)
-            await self.ctx.send(finalAbility, delete_after=10)
-        elif plyer == self.attackingTeam:
-            self.turn = 0
-            abilityActionLine = self.attackingTeam.hero.heroObject.moveList[abilityFunction]['actionLine']
-            finalAbility = abilityActionLine
-            for key in ability:
-                finalAbility = finalAbility.replace("{" + key + "}", str(ability[key]))
-            finalAbility += "\n HP: " + str(self.defendingTeam.s.currentHP) + "/" + str(self.defendingTeam.s.maxHP)
-            await self.ctx.send(finalAbility, delete_after=10)
+        abilityJson = plyer.hero.heroObject.moveList[abilityFunction]
+        try:
+            if abilityJson['sendBattle']:
+                await ability(self)
+        except KeyError:
+            if plyer == self.defendingTeam:
+                ability = await ability(self.attackingTeam)
+            else:
+                ability = await ability(self.defendingTeam)
+        finally:
+            await self.generateBattleImage()
+            if plyer == self.defendingTeam:
+                print(ability)
+                self.turn = 1
+                abilityActionLine = self.defendingTeam.hero.heroObject.moveList[abilityFunction]['actionLine']
+                finalAbility = abilityActionLine
+                for key in ability:
+                    finalAbility = finalAbility.replace("{" + key + "}", str(ability[key]))
+                finalAbility += "\n HP: " + str(self.attackingTeam.s.currentHP) + "/" + str(self.attackingTeam.s.maxHP)
+                await self.ctx.send(finalAbility, delete_after=10)
+            elif plyer == self.attackingTeam:
+                self.turn = 0
+                abilityActionLine = self.attackingTeam.hero.heroObject.moveList[abilityFunction]['actionLine']
+                finalAbility = abilityActionLine
+                for key in ability:
+                    finalAbility = finalAbility.replace("{" + key + "}", str(ability[key]))
+                finalAbility += "\n HP: " + str(self.defendingTeam.s.currentHP) + "/" + str(self.defendingTeam.s.maxHP)
+                await self.ctx.send(finalAbility, delete_after=10)
 
-        plyer.hero.heroObject.coolDowns[abilityFunction] = plyer.hero.heroObject.moveList[abilityFunction][
-            'maxCooldown']
+            plyer.hero.heroObject.coolDowns[abilityFunction] = plyer.hero.heroObject.moveList[abilityFunction][
+                'maxCooldown']
 
     async def executeCombat(self):
         # apply cooldowns

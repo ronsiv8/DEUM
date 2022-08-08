@@ -68,17 +68,21 @@ def draw_grid_over_image_with_players(filename, players, input=False):
     gridCopy.save(directoryPath + "/map.png")
 
 
-async def add_checks_to_map(locationArray, gameId, playerX, playerY):
+async def add_checks_to_map(locationArray, gameId, playerX, playerY, abilityChecks = False):
     """
     Receives an array of tuples of locations.
     Adds a checkmark to each location.
     """
     directoryPath = os.path.dirname(os.path.realpath(__file__))
     img = Image.open(directoryPath + "/games/" + str(gameId) + "/map.png")
+    if not abilityChecks:
+        dotImage = Image.open(directoryPath + "/images/dot.png")
+    else:
+        dotImage = Image.open(directoryPath + "/images/abilityMove.png")
     for location in locationArray:
-        img.paste(Image.open(directoryPath + "/images/dot.png").convert("RGB")
+        img.paste(dotImage
                   , ((location[0] - 1) * 300 + 125, (location[1] - 1) * 300 + 125),
-                  mask=Image.open(directoryPath + "/images/dot.png").convert("RGBA"))
+                  mask=dotImage)
     img.save(directoryPath + "/games/" + str(gameId) + "/map.png")
 
 

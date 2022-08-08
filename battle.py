@@ -271,7 +271,8 @@ class Battle:
         await self.generateBattleImage()
         if self.overallTurns >= self.myGame.battleTurnLimit:
             await self.ctx.send("The battle ended due the turn limit (" + str(self.myGame.battleTurnLimit) + "!) "
-                                "As the game progresses, so will the turn limit!", delete_after=10)
+                                                                                                             "As the game progresses, so will the turn limit!",
+                                delete_after=10)
             await self.leaveBattle()
             return
         self.overallTurns += 1

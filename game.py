@@ -11,7 +11,7 @@ from Player import player
 import imageActions as IA
 
 
-class Game():
+class Game:
     id: int
     creator: int
     players: list[int]
@@ -27,6 +27,7 @@ class Game():
     lastActMessage: discord.Message
     directoryPath: str
     battleTurnLimit = 3
+    zones = None
 
     def __init__(self, id, creator, players, ctx, lengthX, lengthY, bot):
         self.id = id
@@ -55,7 +56,7 @@ class Game():
                 playerY = np.random.randint(0, lengthY)
                 if self.zones[playerX][playerY].isOccupied():
                     get_zone()
-                newPlayer = player(playerX, playerY, discordId, "Sobek", self, -1)
+                newPlayer = player(playerX, playerY, discordId, "Horus", self, -1)
                 self.playerObjects.append(newPlayer)
                 self.zones[playerX][playerY].myPlayer = newPlayer
 

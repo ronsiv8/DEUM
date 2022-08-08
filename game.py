@@ -148,6 +148,8 @@ class Game:
         if self.actMessage is None:
             self.actMessage = await self.ctx.send(embed=embed, view=view)
             self.awaitingMoves = turnPlayer.member.id
+            pluer = await self.getCurrentPlayerTurn()
+            print(pluer.hero.heroName + str(pluer.hero.heroObject))
             return
         await self.actMessage.edit(file=f, embed=embed, view=view)
         self.awaitingMoves = turnPlayer.member.id

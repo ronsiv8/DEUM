@@ -72,7 +72,7 @@ class player:
     def PrintStatus(self):
         return "position:(" + str(self.s.posX) + ", " + str(self.s.posY) + ") (functionally " + \
                str(self.s.posX + 1) + ", " + str(self.s.posY + 1) + ")\r HP: " + str(self.s.maxHP) + "/" + str(
-            self.s.currentHP)
+            self.s.currentHP)+"\r"+self.hero.heroName+str(self.hero.heroObject)
 
     def canMoveTo(self):
         """
@@ -327,14 +327,14 @@ class Ra:
                                       "a sunMorb",
                        "actionLine": "the sun surrounds Ra, granting him {amount} damage reduction!"}
         , "a3": {"abilityType": "outOfCombat", "maxCooldown": 2, "abilityName": "Advanced Maneuver",
-                 "abilityDesc": "Ra utlizes his full potentional for 1 turn, gaining 1 bonus move range for each "
+                 "abilityDesc": "Ra utlizes his full potential for 1 turn, gaining 1 bonus move range for each "
                                 "stack of his SunLight",
                  "actionLine": "Ra Spreads wings made from SunLight, gaining {damageDealt} dealt! "}
         , "ult": {"abilityType": "inCombat", "maxCooldown": 2, "abilityName": "Sun Gods Searing Wrath",
                   "abilityDesc": "Ra channels the full power of the sun, dealing 2000 damage and healing himself for "
                                  "the damage dealt",
                   "actionLine": "Ra obliterates {target}! It deals {damageDealt} and heals Ra for {damageDealt}"}}
-    playStyle = "Ra is the Sun God, by collecting sun orbs he can ascend to his full potentional, dealing incredible " \
+    playStyle = "Ra is the Sun God, by collecting sun orbs he can ascend to his full potential, dealing incredible " \
                 "damage with very strong tools be sure to collect your orbs before your enemy destroys them to gain power and win the game!"
 
     def __init__(self, plyer):
@@ -480,4 +480,4 @@ async def Summon(creator: player, Hero: str, posX: int, posY: int):
     newPlayer = player(posX, posY, creator.member, Hero, creator.myGame, creator.s.team)
     creator.myGame.playerObjects.append(newPlayer)
     creator.myGame.zones[posX][posY].myPlayer = newPlayer
-    return newPlayer.hero
+    print(newPlayer.PrintStatus())

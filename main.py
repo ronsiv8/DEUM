@@ -417,7 +417,7 @@ async def setPos(ctx, *, x: int, y: int):
 
 @bot.slash_command(name='stats', description='notcomplete', guild_ids=[756058242781806703])
 async def stats(ctx):
-    player = await findPlayerObject(ctx.author.id)
+    player = await findCurrentPlayerObject(ctx.author.id)
     await ctx.respond(player.PrintStatus())
 
 

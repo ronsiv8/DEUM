@@ -681,7 +681,7 @@ async def library(ctx):
     await sendLibrary(ctx)
 
 
-@bot.slash_command(name='stats', description='Shows your current characters stats.', guild_ids=[])
+@bot.slash_command(name='stats', description='Shows your current characters stats.')
 async def stats(ctx):
     player = await findCurrentPlayerObject(ctx.author.id)
     if player is None:

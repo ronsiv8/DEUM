@@ -17,11 +17,11 @@ import imageActions as IA
 class Game:
     id: int
     creator: int
-    players: list[int]
+    players = None
     ctx: discord.ext.commands.context
     lengthX: int
     lengthY: int
-    playerObjects: list[player]
+    playerObjects = None
     bot: discord.ext.commands.Bot
     awaitingMoves: int
     turnNum: int = 0

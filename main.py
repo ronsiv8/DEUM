@@ -251,8 +251,8 @@ async def moveToFunc(ctx, x, y):
         await ctx.send("Moved!", delete_after=1)
         done = await handleAbilities(userPlayer, ctx)
         if not done: return
-    adjecentPlayers = await userPlayer.adjacentPlayers()
-    if not adjecentPlayers:
+    adjecentEnemies = await userPlayer.adjacentEnemies()
+    if not adjecentEnemies:
         await userPlayer.myGame.doTurn()
         return
     if userPlayer.outOfCombatNext is not None:
@@ -267,7 +267,6 @@ async def moveToFunc(ctx, x, y):
         if interaction.user.id != ctx.author.id:
             await interaction.response.defer()
             return
-
         x: int = int(interaction.data['custom_id'][-4])
         y:int=int(interaction.data['custom_id'][-1])
         print(str(x)+", "+str(y))
@@ -276,11 +275,12 @@ async def moveToFunc(ctx, x, y):
         await battleMessage.delete()
 
     buttons = []
-    for plyer in adjecentPlayers:
-        button = discord.ui.Button(label="FIGHT " + plyer.member.name+" at " +str(plyer.s.posX)+", "+str(plyer.s.posY), style=discord.ButtonStyle.red)
-        button.custom_id = str(plyer.member.id)+"X:"+str(plyer.s.posX)+"Y:"+str(plyer.s.posY)
-        button.callback = fightCallback
-        buttons.append(button)
+    for plyer in adjecentEnemies:
+        if plyer.s.team!=userPlayer.s.team:
+            button = discord.ui.Button(label="FIGHT " + plyer.member.name+" at " +str(plyer.s.posX)+", "+str(plyer.s.posY), style=discord.ButtonStyle.red)
+            button.custom_id = str(plyer.member.id)+"X:"+str(plyer.s.posX)+"Y:"+str(plyer.s.posY)
+            button.callback = fightCallback
+            buttons.append(button)
     for button in buttons:
         view.add_item(button)
     runButton = discord.ui.Button(label="Don't engage", style=discord.ButtonStyle.green)
@@ -422,6 +422,11 @@ async def setPos(ctx, *, x: int, y: int):
 @bot.slash_command(name='stats', description='notcomplete', guild_ids=[756058242781806703])
 async def stats(ctx):
     player = await findCurrentPlayerObject(ctx.author.id)
+    if player is None:
+        player = await findPlayerObject(ctx.author.id)
+    if player is None:
+        await ctx.respond("you are not in a game!")
+        return
     await ctx.respond(player.PrintStatus())
 
 

@@ -72,7 +72,7 @@ class player:
     def PrintStatus(self):
         return "position:(" + str(self.s.posX) + ", " + str(self.s.posY) + ") (functionally " + \
                str(self.s.posX + 1) + ", " + str(self.s.posY + 1) + ")\r HP: " + str(self.s.maxHP) + "/" + str(
-            self.s.currentHP) + "\r Damage Dealt multiplier:" + str(
+            self.s.currentHP) + "\r from team " + str(self.s.team) + "\rDamage Dealt multiplier:" + str(
             self.s.DamageDealtMultiplier) + "\rDamage Taken multiplier: " + str(
             self.s.DamageTakenMultiplier) + "\r" + self.hero.heroName + str(self.hero.heroObject)
 
@@ -93,17 +93,18 @@ class player:
                             enemyZones.append((i + 1, j + 1))
         return canMove
 
-    async def adjacentPlayers(self):
+    async def adjacentEnemies(self):
         """
         Returns an array of players that are adjacent to the player.
         """
-        adjacentPlayers = []
+        adjacentEnemies = []
         for i in range(self.s.posX - 1, self.s.posX + 2):
             for j in range(self.s.posY - 1, self.s.posY + 2):
                 if 0 <= i < self.myGame.lengthX and 0 <= j < self.myGame.lengthY:
-                    if self.myGame.zones[i][j].isOccupied() and self.myGame.zones[i][j].myPlayer != self:
-                        adjacentPlayers.append(self.myGame.zones[i][j].myPlayer)
-        return adjacentPlayers
+                    if self.myGame.zones[i][j].isOccupied() and self.myGame.zones[i][j].myPlayer != self and \
+                            self.myGame.zones[i][j].myPlayer.s.team != self.s.team:
+                        adjacentEnemies.append(self.myGame.zones[i][j].myPlayer)
+        return adjacentEnemies
 
     async def executeEffects(self, effectName, amount):
         if effectName == "bleed":
@@ -222,7 +223,6 @@ class Horus:
     image: Image
     maxHP: int = 2000
     SandStacks: int = 1
-    SandSoldierList = []
     coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 0}
     moveList = {"a1": {"abilityType": "outOfCombat", "maxCooldown": 2, "abilityName": "Arise!"
         , "abilityDesc": "Horus summons 2 sand soldiers at random areas across the map.",
@@ -258,7 +258,6 @@ class Horus:
             message = await self.myPlayer.myGame.ctx.send(
                 file=discord.File(directoryPath + "\\games\\" + str(self.myPlayer.myGame.id) + "\\map.png"))
             self.myPlayer.myGame.mapMessage = message
-            # self.SandSoldierList.append(Summon(self.myPlayer, SandSoldier, x, y))
 
     def a1Possible(self):
         return self.SandStacks > 0
@@ -283,7 +282,7 @@ class Horus:
                 return True
         return False
 
-    def a3(self):
+    async def a3(self):
         pass
 
     def ultPossible(self):
@@ -292,7 +291,7 @@ class Horus:
                 return True
         return False
 
-    def ult(self):
+    async def ult(self):
         plyerList = []
         for plyer in self.myPlayer.myGame.playerObjects:
             if plyer.hero.heroName == "SandSoldier" and plyer.s.team == self.myPlayer.s.team:
@@ -523,18 +522,18 @@ async def doEffect(player, rangeWidth, rangeHeight, effect, duration, amount):
 async def Buff(plyerList, Buff):
     if Buff == "empower":
         for plyer in plyerList:
-            plyer.myPlayer.s.DamageDealtMultiplier += 5
-            plyer.myPlayer.s.maxHP += 1000
-            plyer.myPlayer.s.currentHP += 1000
-            await plyerList[0].myGame.ctx.send(
-                "All soldiers in team " + str(plyerList[0]) + "feel empowered! Damage x5, Health +1000!",
-                delete_after=3)
+            plyer.s.DamageDealtMultiplier += 5
+            plyer.s.maxHP += 1000
+            plyer.s.currentHP += 1000
+        await plyerList[0].myGame.ctx.send(
+            "All soldiers in team " + str(plyerList[0].s.team) + "feel empowered! Damage x5, Health +1000!",
+            delete_after=3)
 
 
 async def Summon(creator: player, Hero: str, posX: int, posY: int):
     newPlayer = player(posX, posY, creator.member, Hero, creator.myGame, creator.s.team)
     creator.myGame.playerObjects.append(newPlayer)
     creator.myGame.zones[posX][posY].myPlayer = newPlayer
-    await player.myGame.ctx.send(
-        creator.hero.heroName + "Has Summoned" + Hero + "to the field!",
+    await creator.myGame.ctx.send(
+        creator.hero.heroName + " Has Summoned " + Hero + " to the field!",
         delete_after=3)

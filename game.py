@@ -54,6 +54,7 @@ class Game:
         for i in range(lengthX):
             for j in range(lengthY):
                 self.zones[i][j] = zone()
+        count:int=1
         for discordId in players:
             def get_zone():
                 playerX = np.random.randint(0, lengthX)
@@ -61,11 +62,12 @@ class Game:
                 if self.zones[playerX][playerY].isOccupied():
                     get_zone()
                 if discordId.id == 246757653282422795:
-                    newPlayer = player(playerX, playerY, discordId, "Sobek", self, -1)
+                    newPlayer = player(playerX, playerY, discordId, "Sobek", self, count)
                 else:
-                    newPlayer = player(playerX, playerY, discordId, "Horus", self, -1)
+                    newPlayer = player(playerX, playerY, discordId, "Horus", self, count)
                 self.playerObjects.append(newPlayer)
                 self.zones[playerX][playerY].myPlayer = newPlayer
+            count+=1
 
             get_zone()
         # turn order is determined by the order of the players in the list

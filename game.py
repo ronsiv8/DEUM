@@ -62,14 +62,13 @@ class Game:
                 playerY = np.random.randint(0, lengthY)
                 if self.zones[playerX][playerY].isOccupied():
                     get_zone()
-                if discordId.id == 246757653282422795:
+                if discordId.id == 779321470039883777:
                     newPlayer = player(playerX, playerY, discordId, "Sobek", self, count)
                 else:
                     newPlayer = player(playerX, playerY, discordId, "Horus", self, count)
                 self.playerObjects.append(newPlayer)
                 self.zones[playerX][playerY].myPlayer = newPlayer
             count+=1
-
             get_zone()
         # turn order is determined by the order of the players in the list
         random.shuffle(self.playerObjects)
@@ -236,5 +235,4 @@ class Game:
         Kills a player
         """
         await self.ctx.send("|FALLEN| " + player.hero.heroName.upper() + " HAS FALLEN! |FALLEN|")
-        # remove player from playerObjects
         self.playerObjects.remove(player)

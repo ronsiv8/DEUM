@@ -261,7 +261,7 @@ class Battle:
             await self.ctx.send(self.defendingTeam.hero.heroName.upper() + " has won the battle!", delete_after=10)
             await self.leaveBattle()
             return
-        await asyncio.sleep(10)
+        await asyncio.sleep(3)
         await self.ChooseAbility(self.attackingTeam, self.attackerAbility)
         if self.defendingTeam.s.currentHP <= 0:
             await self.ctx.send(self.attackingTeam.hero.heroName.upper() + " has won the battle!", delete_after=10)
@@ -271,7 +271,7 @@ class Battle:
             await self.ctx.send(self.defendingTeam.hero.heroName.upper() + " has won the battle!", delete_after=10)
             await self.leaveBattle()
             return
-        await asyncio.sleep(10)
+        await asyncio.sleep(3)
         await self.generateBattleImage()
         if self.overallTurns >= self.myGame.battleTurnLimit:
             await self.ctx.send("The battle ended due the turn limit (" + str(self.myGame.battleTurnLimit) + "!) "

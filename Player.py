@@ -261,12 +261,12 @@ class Horus:
             await self.p(x, y)
         else:
             await doAbility(abilityRequest={"Summon": {"hero": "SandSoldier", "x": x, "y": y}}, playerDo=self.myPlayer)
-            await self.myPlayer.myGame.generate_map()
-            await self.myPlayer.myGame.mapMessage.delete()
-            directoryPath = os.path.dirname(os.path.realpath(__file__))
-            message = await self.myPlayer.myGame.ctx.send(
-                file=discord.File(directoryPath + "\\games\\" + str(self.myPlayer.myGame.id) + "\\map.png"))
-            self.myPlayer.myGame.mapMessage = message
+            # await self.myPlayer.myGame.generate_map()
+            # await self.myPlayer.myGame.mapMessage.delete()
+            # directoryPath = os.path.dirname(os.path.realpath(__file__))
+            # message = await self.myPlayer.myGame.ctx.send(
+            #     file=discord.File(directoryPath + "\\games\\" + str(self.myPlayer.myGame.id) + "\\map.png"))
+            # self.myPlayer.myGame.mapMessage = message
 
     def a1Possible(self):
         return self.SandStacks > 0
@@ -277,6 +277,7 @@ class Horus:
             x = random.randint(0, self.myPlayer.myGame.lengthX - 1)
             y = random.randint(0, self.myPlayer.myGame.lengthY - 1)
             await self.p(x, y)
+        await doAbility(abilityRequest={"Dash": {"range": 1}}, playerDo=self.myPlayer)
 
     async def a2(self, target: player):
         target.s.DamageTakenMultiplier += 0.1
@@ -286,6 +287,8 @@ class Horus:
                 "target": target.member.display_name}
 
     def a3Possible(self):
+        if self.SandStacks > 0:
+            return False
         for plyer in self.myPlayer.myGame.playerObjects:
             if plyer.hero.heroName == "SandSoldier" and plyer.s.team == self.myPlayer.s.team:
                 return True
@@ -294,11 +297,13 @@ class Horus:
     async def a3(self):
         originalX = self.myPlayer.s.posX
         originalY = self.myPlayer.s.posY
-        dashLength: int = 1
+        self.SandStacks -= 1
+        dashLength: int = 0
         for plyer in self.myPlayer.myGame.playerObjects:
             if plyer.hero.heroName == "SandSoldier" and plyer.s.team == self.myPlayer.s.team:
                 dashLength += 1
         await doAbility(abilityRequest={"Dash": {"range": dashLength}}, playerDo=self.myPlayer)
+        await self.p(originalX, originalY)
 
     def ultPossible(self):
         for plyer in self.myPlayer.myGame.playerObjects:
@@ -311,8 +316,8 @@ class Horus:
         for plyer in self.myPlayer.myGame.playerObjects:
             if plyer.hero.heroName == "SandSoldier" and plyer.s.team == self.myPlayer.s.team:
                 plyerList.append(plyer)
-
         await doAbility(abilityRequest={"Buff": {"plyerList": plyerList, "Buff": "empower"}}, playerDo=self.myPlayer)
+        await doAbility(abilityRequest={"Dash": {"range": 1}}, playerDo=self.myPlayer)
 
 
 class SandSoldier:
@@ -327,7 +332,7 @@ class SandSoldier:
                        "abilityDesc": "The sand soldier strikes for 100 damage but increases the enemies defense by 10% permanently"
                                       "increases the damage the enemy takes by 10% permanently!",
                        "actionLine": "The sand soldier strikes! It deals {damage} to {target}! they feel stronger now..."},
-                "a3": {"abilityType": "inCombat", "maxCooldown": 2, "abilityName": "Conquering Sands",
+                "a3": {"abilityType": "inCombat", "maxCooldown": 2, "abilityName": "Sand Duel",
                        "abilityDesc": "The sand soldier challenges the enemy,"
                                       "increasing the damage the enemy takes by 10% permanently!",
                        "actionLine": "Horus challenged {target}. they are Vulnerable!"},
@@ -344,25 +349,25 @@ class SandSoldier:
 
     async def a1(self, target: player):
         await target.TakeDamage(50 * self.myPlayer.s.DamageDealtMultiplier)
-        return {"damage": round(150 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier),
+        return {"damage": round(50 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier),
                 "target": target.member.display_name}
 
     async def a2(self, target: player):
         await target.TakeDamage(100 * self.myPlayer.s.DamageDealtMultiplier)
         target.s.DamageTakenMultiplier -= 0.1
-        return {"damage": round(200 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier),
+        return {"damage": round(100 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier),
                 "target": target.member.display_name}
 
     async def a3(self, target: player):
         await target.TakeDamage(5 * self.myPlayer.s.DamageDealtMultiplier)
         target.s.DamageTakenMultiplier += 0.1
-        return {"damage": round(10 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier),
+        return {"damage": round(5 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier),
                 "target": target.member.display_name}
 
     async def ult(self, target: player):
         await target.TakeDamage(200 * self.myPlayer.s.DamageDealtMultiplier)
         await self.myPlayer.myGame.killPlayer(self.myPlayer)
-        return {"damageDealt": 200 * self.myPlayer.s.DamageDealtMultiplier, "target": target.member.display_name}
+        return {"damage": round(200 * self.myPlayer.s.DamageDealtMultiplier), "target": target.member.display_name}
 
 
 class Ra:
@@ -414,7 +419,9 @@ class Ra:
         if self.SunOrbs >= 5:
             await target.TakeDamage(150 * self.myPlayer.s.DamageDealtMultiplier)
             damagedealt += 150 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
-        return {"damageDealt": int(damagedealt)}
+            return {"damageDealt": int(damagedealt),"target":target.hero.heroName,"additionalText":"The Sun Scorched the enemy, dealing bonus damage!"}
+        return {"damageDealt": int(damagedealt), "target": target.hero.heroName,
+                "additionalText": "the attacks potential is not unleashed..."}
 
     async def a2(self, target: player):
         self.myPlayer.s.DamageTakenMultiplier -= self.SunOrbs * 0.1
@@ -432,7 +439,7 @@ class Ra:
         self.myPlayer.s.currentHP = max(
             min(self.myPlayer.s.currentHP + 2000 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier,
                 self.myPlayer.s.maxHP), self.myPlayer.s.currentHP)
-        return {"damageDealt": int(2000 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier)}
+        return {"damageDealt": int(2000 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier),"target":target.hero.heroName}
 
 
 class hero:
@@ -452,7 +459,7 @@ class hero:
         plyer.s.currentHP = self.heroObject.maxHP
 
 
-async def doAbility(abilityRequest: dict, playerDo):
+async def doAbility(abilityRequest: dict, playerDo: player):
     """
     Ability requests are built of a dict that is in order to what the end user needs to do.
     ability types:
@@ -460,6 +467,7 @@ async def doAbility(abilityRequest: dict, playerDo):
     Cause Effect (includes effect -> REQUIRED, amount, duration (one of these are required, replace the others with None)
     Damage (Zone, amount)
     Heal (Zone, amount)
+    :param playerDo:
     :param abilityRequest:
     :return:
     """

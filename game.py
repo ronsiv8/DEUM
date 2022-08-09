@@ -7,6 +7,7 @@ from io import BytesIO
 
 import discord.ext.commands.context
 import numpy as np
+import win32event
 from PIL import Image
 
 from zone import zone
@@ -131,7 +132,8 @@ class Game:
 
         for move in all:
             moveJson = turnPlayer.hero.heroObject.moveList[move]
-            text += moveJson['abilityName'] + "\n" + moveJson['abilityDesc'] + "\n"
+            text += moveJson['abilityName'] + "\n" + moveJson['abilityDesc'] + " Cooldown: " + \
+                    str(turnPlayer.hero.heroObject.coolDowns[move]) + "\n"
         if text == "":
             text = "\u200b"
         embed.add_field(name="And use moves:", value=text, inline=True)
@@ -156,6 +158,25 @@ class Game:
         for plyer in self.playerObjects:
             if plyer.hero.heroName == "Ra":
                 plyer.hero.heroObject.p()
+        if random.randint(1, 1) == 1:
+            await self.createRandomEvent()
+
+    async def createRandomEvent(self):
+        x = random.randint(0, self.lengthX - 1)
+        y = random.randint(0, self.lengthY - 1)
+        while self.zones[x][y].isOccupied():
+            x = random.randint(0, self.lengthX - 1)
+            y = random.randint(0, self.lengthY - 1)
+        events = [
+            "Stranger",
+            "brawl"
+        ]
+        event = random.choice(events)
+        if event == "Stranger":
+            self.zones[x][y].myEvent = self.zones[x][y].event("Stranger")
+        elif event == "brawl":
+            self.zones[x][y].myEvent = self.zones[x][y].event("brawl")
+        print("Event created at " + str(x) + "," + str(y))
 
     async def getNextPlayerTurn(self):
         if self.turnNum + 1 == len(self.playerObjects):
@@ -174,7 +195,10 @@ class Game:
             if player.s.currentHP > 0:
                 playersAlive.append(player)
             if len(playersAlive) > 1:
-                return False
+                team = playersAlive[0].s.team
+                for player in playersAlive:
+                    if player.s.team != team or player.s.team == -1:
+                        return False
         return playersAlive[0]
 
     async def endGame(self, winner: player):

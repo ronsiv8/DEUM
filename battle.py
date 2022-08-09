@@ -44,7 +44,7 @@ class Battle:
             os.mkdir(path + "\\Battles\\" + name)
         # create a new image
         pathOfScript = os.path.dirname(os.path.realpath(__file__))
-        originalBattleImage = Image.open(pathOfScript + "\\images\\battleBg.jpg")
+        originalBattleImage = Image.open(pathOfScript + "\\images\\battleBg.png")
         # create a new image
         self.battleImage = originalBattleImage.copy()
         heroImage = Image.open(pathOfScript + "\\images\\" + self.attackingTeam.hero.heroName + ".png").convert("RGBA")

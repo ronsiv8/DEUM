@@ -18,6 +18,7 @@ class S:  # short for status,stores stats
     DamageTakenMultiplier: float
     DamageDealtMultiplier: float
     abilityCooldowns: [int]
+    speedProgress = 0
     statusEffects: dict = {}
 
     def __init__(self, PosX: int, PosY: int, Team, movementSpeed=3):
@@ -33,6 +34,7 @@ class S:  # short for status,stores stats
         self.currentHP = 0
         self.maxHP = 0
         self.abilityCooldowns = []
+        self.speedProgress = 0
         self.dead = False
         self.statusEffects = {}
         for i in range(5):
@@ -115,7 +117,7 @@ class player:
         for ability in self.hero.heroObject.moveList:
             if self.hero.heroObject.moveList[ability]['abilityType'] == "outOfCombat" and \
                     self.hero.heroObject.coolDowns[ability] <= 0 and getattr(self.hero.heroObject,
-                                                                             ability + "Possible"):
+                                                                             ability + "Possible")():
                 outOfCombatAbilities.append(ability)
         return outOfCombatAbilities
 
@@ -128,6 +130,13 @@ class player:
             if self.hero.heroObject.moveList[ability]['abilityType'] == "outOfCombat":
                 outOfCombatAbilities.append(ability)
         return outOfCombatAbilities
+
+    async def checkProgression(self):
+        if self.s.speedProgress >= 1:
+            self.s.speedProgress = 0
+            self.s.movementSpeed += 1
+            await self.myGame.ctx.send("{0}'s movement speed has increased to {1}!".format(self.hero.heroName, self.s.movementSpeed),
+                                       delete_after=5)
 
 
 class Sobek:
@@ -350,7 +359,9 @@ class Ra:
         if self.myPlayer.myGame.zones[x][y].isOccupied() or self.myPlayer.myGame.zones[x][y].myEvent is not None:
             self.p()
         else:
-            zone.event("sunOrb", self.myPlayer.myGame.zones[x, y], self.myPlayer.myGame, x, y)
+            gotZone = self.myPlayer.myGame.zones[x][y]
+            gotZone.myEvent = gotZone.event("sunOrb")
+            print("passive event created on zone " + str(x) + " " + str(y))
 
     async def a1(self, target: player):
         damagedealt = 0
@@ -368,8 +379,8 @@ class Ra:
     def a3Possible(self):
         return self.SunOrbs > 0
 
-    def a3(self):
-        self.myPlayer.s.movementSpeed += self.SunOrbs
+    async def a3(self):
+        await doAbility(abilityRequest={"Dash": {"range": self.SunOrbs + 1}}, playerDo=self.myPlayer)
         return {"damageDealt": self.SunOrbs}
 
     async def ult(self, target: player):

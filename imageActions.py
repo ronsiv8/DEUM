@@ -65,9 +65,11 @@ def draw_grid_over_image_with_players(filename, players, input=False):
     font = ImageFont.truetype(directoryPath + "/fonts/arial.ttf", 20)
     for player in players:
         if not input:
-            gridCopy.paste(player.hero.heroObject.image, (player.s.posX * 300, player.s.posY * 300)) #,mask=player.hero.heroObject.image
+            gridCopy.paste(player.hero.heroObject.image, (player.s.posX * 300, player.s.posY * 300),
+                           mask=player.hero.heroObject.image)
         else:
-            gridCopy.paste(player.hero.heroObject.image, (player.s.posX * 300, player.s.posY * 300))#mask=player.hero.heroObject.image
+            gridCopy.paste(player.hero.heroObject.image, (player.s.posX * 300, player.s.posY * 300),
+                           mask=player.hero.heroObject.image)
         effects = player.s.statusEffects
         count = 0
         for effect in effects:
@@ -78,6 +80,15 @@ def draw_grid_over_image_with_players(filename, players, input=False):
             draw.text((player.s.posX * 300 + count * 20, player.s.posY * 250), str(effects[effect]['amount']),
                       font=font, fill=(255, 255, 255))
             count += 1
+    # put the event image on the grid
+    allZones = players[0].myGame.zones
+    for row in range(players[0].myGame.lengthY):
+        for col in range(players[0].myGame.lengthX):
+            zone = allZones[row][col]
+            if zone.myEvent is not None:
+                print("zone event drawn")
+                image = Image.open(zone.myEvent.eventObject.imageDirectory).convert("RGBA")
+                gridCopy.paste(image, (row * 300, col * 300), image)
     gridCopy.save(directoryPath + "/map.png")
 
 

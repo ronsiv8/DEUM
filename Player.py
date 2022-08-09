@@ -191,8 +191,7 @@ class Sobek:
     async def a2(self):
         await doAbility(abilityRequest={"Dash": {"range": 2},
                                         "CauseEffect": {"rangeWidth": 3, "rangeHeight": 3, "effect": "bleed",
-                                                        "duration": 2, "amount": None},
-                                        "Dash2": {"range": 2}}
+                                                        "duration": 2, "amount": None}}
                         , playerDo=self.myPlayer)
 
     async def a3(self, target: player):
@@ -366,8 +365,8 @@ class SandSoldier:
 
     async def ult(self, target: player):
         await target.TakeDamage(200 * self.myPlayer.s.DamageDealtMultiplier)
-        await self.myPlayer.myGame.killPlayer(self.myPlayer)
-        return {"damage": round(200 * self.myPlayer.s.DamageDealtMultiplier*target.s.DamageTakenMultiplier), "target": target.member.display_name}
+        await self.TakeDamage(100000)
+        return {"damage": round(200 * self.myPlayer.s.DamageDealtMultiplier), "target": target.member.display_name}
 
 
 class Ra:
@@ -472,7 +471,8 @@ async def doAbility(abilityRequest: dict, playerDo: player):
     :return:
     """
     playerDo.doingAbility = True
-    playerDo.savedMove = playerDo.s.movementSpeed
+    if playerDo.savedMove is None:
+        playerDo.savedMove = playerDo.s.movementSpeed
     if "Dash" in list(abilityRequest.keys())[0]:
         do = list(abilityRequest.keys())[0]
         await doDash(playerDo, abilityRequest[do]['range'])

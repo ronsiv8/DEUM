@@ -183,7 +183,7 @@ class Game:
         print("Event created at " + str(x) + "," + str(y))
 
     async def getNextPlayerTurn(self):
-        if self.turnNum + 1 == len(self.playerObjects):
+        if self.turnNum + 1 >= len(self.playerObjects):
             return self.playerObjects[0]
         return self.playerObjects[self.turnNum + 1]
 

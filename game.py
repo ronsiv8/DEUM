@@ -7,7 +7,6 @@ from io import BytesIO
 
 import discord.ext.commands.context
 import numpy as np
-import win32event
 from PIL import Image
 
 from zone import zone
@@ -64,6 +63,8 @@ class Game:
                     get_zone()
                 if discordId.id == 779321470039883777:
                     newPlayer = player(playerX, playerY, discordId, "Sobek", self, count)
+                elif discordId.id == 246757653282422795:
+                    newPlayer = player(playerX, playerY, discordId, "Ra", self, count)
                 else:
                     newPlayer = player(playerX, playerY, discordId, "Horus", self, count)
                 self.playerObjects.append(newPlayer)

@@ -259,8 +259,8 @@ async def moveToFunc(ctx, x, y):
         eventResponse = await zone.myEvent.eventObject.ActivateEvent(userPlayer)
         if eventResponse:
             await ctx.send(eventResponse, delete_after=5)
-    adjecentEnemies = await userPlayer.adjacentEnemies()
-    if not adjecentEnemies:
+    adjacentEnemies = await userPlayer.adjacentEnemies()
+    if not adjacentEnemies:
         await userPlayer.myGame.doTurn()
         return
     if userPlayer.outOfCombatNext is not None:

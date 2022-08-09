@@ -287,7 +287,7 @@ class Horus:
                 "target": target.member.display_name}
 
     def a3Possible(self):
-        if self.SandStacks > 0:
+        if self.SandStacks < 0:
             return False
         for plyer in self.myPlayer.myGame.playerObjects:
             if plyer.hero.heroName == "SandSoldier" and plyer.s.team == self.myPlayer.s.team:
@@ -367,7 +367,7 @@ class SandSoldier:
     async def ult(self, target: player):
         await target.TakeDamage(200 * self.myPlayer.s.DamageDealtMultiplier)
         await self.myPlayer.myGame.killPlayer(self.myPlayer)
-        return {"damage": round(200 * self.myPlayer.s.DamageDealtMultiplier), "target": target.member.display_name}
+        return {"damage": round(200 * self.myPlayer.s.DamageDealtMultiplier*target.s.DamageTakenMultiplier), "target": target.member.display_name}
 
 
 class Ra:

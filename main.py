@@ -267,15 +267,18 @@ async def moveToFunc(ctx, x, y):
         if interaction.user.id != ctx.author.id:
             await interaction.response.defer()
             return
-        userId = interaction.data['custom_id']
-        attackPlayer: player = await findPlayerObject(int(userId))
+
+        x: int = int(interaction.data['custom_id'][-4])
+        y:int=int(interaction.data['custom_id'][-1])
+        print(str(x)+", "+str(y))
+        attackPlayer: Player.player = userPlayer.myGame.zones[x][y].myPlayer
         await fightLoop(attackPlayer, userPlayer, ctx)
         await battleMessage.delete()
 
     buttons = []
-    for player in adjecentPlayers:
-        button = discord.ui.Button(label="FIGHT " + player.member.name, style=discord.ButtonStyle.red)
-        button.custom_id = str(player.member.id)
+    for plyer in adjecentPlayers:
+        button = discord.ui.Button(label="FIGHT " + plyer.member.name+" at " +str(plyer.s.posX)+", "+str(plyer.s.posY), style=discord.ButtonStyle.red)
+        button.custom_id = str(plyer.member.id)+"X:"+str(plyer.s.posX)+"Y:"+str(plyer.s.posY)
         button.callback = fightCallback
         buttons.append(button)
     for button in buttons:
@@ -327,6 +330,7 @@ async def fightLoop(attackingPlayer: Player.player, defendingPlayer: Player.play
             currentHero = battle.getCurrentTurn()
             currentHero = currentHero.hero
             try:
+                print(currentHero.heroObject.moveList[ability])
                 if currentHero.heroObject.moveList[ability]['abilityType'] != "inCombat" or \
                         currentHero.heroObject.coolDowns[ability] != 0:
                     print(currentHero.heroObject.coolDowns)

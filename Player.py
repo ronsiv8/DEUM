@@ -268,7 +268,7 @@ class Horus:
             x = random.randint(0, self.myPlayer.myGame.lengthX - 1)
             y = random.randint(0, self.myPlayer.myGame.lengthY - 1)
             await self.p(x, y)
-        await doAbility(abilityRequest={"Pass": {}}, playerDo=self.myPlayer)
+        await doAbility(abilityRequest={"Dash": {"range": 1}}, playerDo=self.myPlayer)
 
     async def a2(self, target: player):
         target.s.DamageTakenMultiplier += 0.1
@@ -307,8 +307,8 @@ class Horus:
         for plyer in self.myPlayer.myGame.playerObjects:
             if plyer.hero.heroName == "SandSoldier" and plyer.s.team == self.myPlayer.s.team:
                 plyerList.append(plyer)
-
         await doAbility(abilityRequest={"Buff": {"plyerList": plyerList, "Buff": "empower"}}, playerDo=self.myPlayer)
+        await doAbility(abilityRequest={"Dash": {"range": 1}}, playerDo=self.myPlayer)
 
 
 class SandSoldier:
@@ -485,8 +485,6 @@ async def doAbility(abilityRequest: dict, playerDo: player):
         print(abilityRequest[do])
         await Buff(abilityRequest[do]["plyerList"], abilityRequest[do]["Buff"])
         msg = True
-    elif "Pass" in list(abilityRequest.keys())[0]:
-        msg = False
     return msg
 
 

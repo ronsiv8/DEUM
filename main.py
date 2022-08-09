@@ -191,7 +191,8 @@ async def findCurrentPlayerObject(userId):
     return None
 
 
-@bot.slash_command(name='pass_turn', description='pass your turn, counts as moving in place', guild_ids=[756058242781806703])
+@bot.slash_command(name='pass_turn', description='pass your turn, counts as moving in place',
+                   guild_ids=[756058242781806703])
 async def pass_turn(ctx):
     await pass_turnFunc(ctx)
 
@@ -251,8 +252,8 @@ async def moveToFunc(ctx, x, y):
         await ctx.send("Moved!", delete_after=1)
         done = await handleAbilities(userPlayer, ctx)
         if not done: return
-    adjecentEnemies = await userPlayer.adjacentEnemies()
-    if not adjecentEnemies:
+    adjacentEnemies = await userPlayer.adjacentEnemies()
+    if not adjacentEnemies:
         await userPlayer.myGame.doTurn()
         return
     if userPlayer.outOfCombatNext is not None:
@@ -268,17 +269,19 @@ async def moveToFunc(ctx, x, y):
             await interaction.response.defer()
             return
         x: int = int(interaction.data['custom_id'][-4])
-        y:int=int(interaction.data['custom_id'][-1])
-        print(str(x)+", "+str(y))
+        y: int = int(interaction.data['custom_id'][-1])
+        print(str(x) + ", " + str(y))
         attackPlayer: Player.player = userPlayer.myGame.zones[x][y].myPlayer
         await fightLoop(attackPlayer, userPlayer, ctx)
         await battleMessage.delete()
 
     buttons = []
-    for plyer in adjecentEnemies:
-        if plyer.s.team!=userPlayer.s.team:
-            button = discord.ui.Button(label="FIGHT " + plyer.member.name+" at " +str(plyer.s.posX)+", "+str(plyer.s.posY), style=discord.ButtonStyle.red)
-            button.custom_id = str(plyer.member.id)+"X:"+str(plyer.s.posX)+"Y:"+str(plyer.s.posY)
+    for plyer in adjacentEnemies:
+        if plyer.s.team != userPlayer.s.team:
+            button = discord.ui.Button(
+                label="FIGHT " + plyer.member.name + " at " + str(plyer.s.posX) + ", " + str(plyer.s.posY),
+                style=discord.ButtonStyle.red)
+            button.custom_id = str(plyer.member.id) + "X:" + str(plyer.s.posX) + "Y:" + str(plyer.s.posY)
             button.callback = fightCallback
             buttons.append(button)
     for button in buttons:

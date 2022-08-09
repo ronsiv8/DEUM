@@ -340,25 +340,25 @@ class SandSoldier:
 
     async def a1(self, target: player):
         await target.TakeDamage(50 * self.myPlayer.s.DamageDealtMultiplier)
-        return {"damage": round(150 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier),
+        return {"damage": round(50 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier),
                 "target": target.member.display_name}
 
     async def a2(self, target: player):
         await target.TakeDamage(100 * self.myPlayer.s.DamageDealtMultiplier)
         target.s.DamageTakenMultiplier -= 0.1
-        return {"damage": round(200 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier),
+        return {"damage": round(100 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier),
                 "target": target.member.display_name}
 
     async def a3(self, target: player):
         await target.TakeDamage(5 * self.myPlayer.s.DamageDealtMultiplier)
         target.s.DamageTakenMultiplier += 0.1
-        return {"damage": round(10 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier),
+        return {"damage": round(5 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier),
                 "target": target.member.display_name}
 
     async def ult(self, target: player):
         await target.TakeDamage(200 * self.myPlayer.s.DamageDealtMultiplier)
         await self.myPlayer.myGame.killPlayer(self.myPlayer)
-        return {"damageDealt": 200 * self.myPlayer.s.DamageDealtMultiplier, "target": target.member.display_name}
+        return {"damage": round(200 * self.myPlayer.s.DamageDealtMultiplier), "target": target.member.display_name}
 
 
 class Ra:
@@ -408,7 +408,9 @@ class Ra:
         if self.SunOrbs >= 5:
             await target.TakeDamage(150 * self.myPlayer.s.DamageDealtMultiplier)
             damagedealt += 150 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
-        return {"damageDealt": int(damagedealt)}
+            return {"damageDealt": int(damagedealt),"target":target.hero.heroName,"additionalText":"The Sun Scorched the enemy, dealing bonus damage!"}
+        return {"damageDealt": int(damagedealt), "target": target.hero.heroName,
+                "additionalText": "the attacks potential is not unleashed..."}
 
     async def a2(self, target: player):
         self.myPlayer.s.DamageTakenMultiplier -= self.SunOrbs * 0.1
@@ -426,7 +428,7 @@ class Ra:
         self.myPlayer.s.currentHP = max(
             min(self.myPlayer.s.currentHP + 2000 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier,
                 self.myPlayer.s.maxHP), self.myPlayer.s.currentHP)
-        return {"damageDealt": int(2000 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier)}
+        return {"damageDealt": int(2000 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier),"target":target.hero.heroName}
 
 
 class hero:

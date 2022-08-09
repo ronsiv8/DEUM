@@ -279,7 +279,7 @@ async def moveToFunc(ctx, x, y):
     for plyer in adjacentEnemies:
         if plyer.s.team != userPlayer.s.team:
             button = discord.ui.Button(
-                label="FIGHT " + plyer.member.name + " at " + str(plyer.s.posX) + ", " + str(plyer.s.posY),
+                label="FIGHT " + plyer.member.name + " at " + str(plyer.s.posX+1) + ", " + str(plyer.s.posY+1),
                 style=discord.ButtonStyle.red)
             button.custom_id = str(plyer.member.id) + "X:" + str(plyer.s.posX) + "Y:" + str(plyer.s.posY)
             button.callback = fightCallback

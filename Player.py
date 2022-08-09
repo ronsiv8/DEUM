@@ -151,7 +151,7 @@ class Sobek:
         , "abilityDesc": "Sobek Strikes his enemy, dealing 100 DAMAGE, refreshing BLEED's Duration on the target, "
                          "and applying BLEED according to damage dealt. After that, DOUBLE the target's BLEED amount.",
                        "actionLine": "SOBEK Strikes! It deals {damageDealt} to {target}! {target} now BLEEDS for {bleed}!"},
-                "a2": {"abilityType": "outOfCombat", "maxCooldown": 4, "abilityName": "Hunter's Chase'",
+                "a2": {"abilityType": "outOfCombat", "maxCooldown": 4, "abilityName": "Hunter's Chase",
                        "abilityDesc": "Dash 2 tiles. After that, refresh BLEED's Duration on all enemies in a 3x3 area",
                        "actionLine": "SOBEK dashes! {target} now BLEEDS for {bleed}!"}
         , "a3": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Open Wounds",
@@ -159,9 +159,9 @@ class Sobek:
                                 "target is already BLEEDING, the damage is doubled.",
                  "actionLine": "SOBEK Opens {target}'s wounds! {target} now BLEEDS for {bleed}! {damageDealt} dealt! "
                                "{additionalText}"}
-        , "ult": {"abilityType": "inCombat", "maxCooldown": 10, "abilityName": "Sobek's Rage",
-                  "abilityDesc": "Sobek Strikes the enemy with all of his RAGE, dealing the amount of BLEED stacks on the enemy.",
-                  "actionLine": "SOBEK destroys the enemy with all of his RAGE! It deals {damageDealt} to {target}!"}}
+        , "ult": {"abilityType": "inCombat", "maxCooldown": 10, "abilityName": "Brutalize",
+                  "abilityDesc": "Sobek Strikes the enemy with all of his hatred, dealing the amount of BLEED stacks on the enemy.",
+                  "actionLine": "SOBEK destroys the enemy with all of his HATRED! It deals {damageDealt} to {target}!"}}
     playStyle = "Sobek is a well trained fighter, causing enemies to BLEED being his main power source. You have to " \
                 "play aggressively and cause your enemies to BLEED if you want to win. "
 

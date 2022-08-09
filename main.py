@@ -308,23 +308,28 @@ async def moveToFunc(ctx, x, y):
     battleMessage = await ctx.send(embed=embed, view=view)
 
 
-async def handleAbilities(player, ctx):
-    if player.outOfCombatNext == {}:
-        player.outOfCombatNext = None
-        player.s.movementSpeed = player.savedMove
-        await player.myGame.generate_map()
+
+async def handleAbilities(playerDo, ctx):
+    if playerDo.outOfCombatNext == {}:
+        playerDo.outOfCombatNext = None
+        playerDo.s.movementSpeed = playerDo.savedMove
+        playerDo.savedMove = None
+        await playerDo.myGame.generate_map()
         # add checks
-        nextPlayerMoves = await player.myGame.getNextPlayerTurn()
+        nextPlayerMoves = await playerDo.myGame.getNextPlayerTurn()
         nextPlayerMoves = nextPlayerMoves.canMoveTo()
-        await player.myGame.mapMessage.delete()
-        await IA.add_checks_to_map(nextPlayerMoves, player.myGame.id, player.s.posX, player.s.posY)
+        try:
+            await playerDo.myGame.mapMessage.delete()
+        except:
+            pass
+        await IA.add_checks_to_map(nextPlayerMoves, playerDo.myGame.id, playerDo.s.posX, playerDo.s.posY)
         message = await ctx.send(
-            file=discord.File(directoryPath + "\\games\\" + str(player.myGame.id) + "\\map.png"))
-        player.myGame.mapMessage = message
+            file=discord.File(directoryPath + "\\games\\" + str(playerDo.myGame.id) + "\\map.png"))
+        playerDo.myGame.mapMessage = message
         return True
-    isPassive = await Player.doAbility(player.outOfCombatNext, player)
+    isPassive = await Player.doAbility(playerDo.outOfCombatNext, playerDo)
     if isPassive:
-        await handleAbilities(player, ctx)
+        await handleAbilities(playerDo, ctx)
     return False
 
 

@@ -234,7 +234,7 @@ class Horus:
                  "abilityDesc": "Horus consumes a stack of his sand soldiers to Dash the amount of sand soldiers on the field. then leaves a sand soldier in his original position!",
                  "actionLine": "change this when it works"}
         , "ult": {"abilityType": "outOfCombat", "maxCooldown": 5, "abilityName": "Emperor's Divide",
-                  "abilityDesc": "Horus imbues all current soldiers with power, granting them 5x damage and 1000 bonus max health.",
+                  "abilityDesc": "Horus empowers all current soldiers, granting them 5x damage and 1000 bonus max health.",
                   "actionLine": "change this when it works"}}
     playStyle = "Horus is the emperor of the sands. Horus summons sand soldiers to find for him, and challenges his opponent to increase his damage. play around your soldiers to control the field and win"
 
@@ -264,7 +264,7 @@ class Horus:
 
     async def a1(self):
         self.SandStacks -= 1
-        for i in range(3):
+        for i in range(2):
             x = random.randint(0, self.myPlayer.myGame.lengthX - 1)
             y = random.randint(0, self.myPlayer.myGame.lengthY - 1)
             await self.p(x, y)
@@ -283,7 +283,13 @@ class Horus:
         return False
 
     async def a3(self):
-        pass
+        originalX = self.myPlayer.s.posX
+        originalY = self.myPlayer.s.posY
+        dashLength: int = 1
+        for plyer in self.myPlayer.myGame.playerObjects:
+            if plyer.hero.heroName == "SandSoldier" and plyer.s.team == self.myPlayer.s.team:
+                dashLength += 1
+        await doAbility(abilityRequest={"Dash": {"range": dashLength}}, playerDo=self.myPlayer)
 
     def ultPossible(self):
         for plyer in self.myPlayer.myGame.playerObjects:

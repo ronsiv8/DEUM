@@ -258,8 +258,8 @@ async def moveToFunc(ctx, x, y):
         eventResponse = await zone.myEvent.eventObject.ActivateEvent(userPlayer)
         if eventResponse:
             await ctx.send(eventResponse, delete_after=5)
-    adjecentPlayers = await userPlayer.adjacentPlayers()
-    if not adjecentPlayers:
+    adjecentEnemies = await userPlayer.adjacentEnemies()
+    if not adjecentEnemies:
         await userPlayer.myGame.doTurn()
         return
     if userPlayer.outOfCombatNext is not None:
@@ -274,8 +274,10 @@ async def moveToFunc(ctx, x, y):
         if interaction.user.id != ctx.author.id:
             await interaction.response.defer()
             return
-        userId = interaction.data['custom_id']
-        attackPlayer: player = await findPlayerObject(int(userId))
+        x: int = int(interaction.data['custom_id'][-4])
+        y:int=int(interaction.data['custom_id'][-1])
+        print(str(x)+", "+str(y))
+        attackPlayer: Player.player = userPlayer.myGame.zones[x][y].myPlayer
         await fightLoop(attackPlayer, userPlayer, ctx)
         await battleMessage.delete()
 
@@ -288,11 +290,12 @@ async def moveToFunc(ctx, x, y):
         return
 
     buttons = []
-    for player in adjecentPlayers:
-        button = discord.ui.Button(label="FIGHT " + player.member.name, style=discord.ButtonStyle.red)
-        button.custom_id = str(player.member.id)
-        button.callback = fightCallback
-        buttons.append(button)
+    for plyer in adjecentEnemies:
+        if plyer.s.team!=userPlayer.s.team:
+            button = discord.ui.Button(label="FIGHT " + plyer.member.name+" at " +str(plyer.s.posX)+", "+str(plyer.s.posY), style=discord.ButtonStyle.red)
+            button.custom_id = str(plyer.member.id)+"X:"+str(plyer.s.posX)+"Y:"+str(plyer.s.posY)
+            button.callback = fightCallback
+            buttons.append(button)
     for button in buttons:
         view.add_item(button)
     runButton = discord.ui.Button(label="Don't engage", style=discord.ButtonStyle.green)
@@ -416,6 +419,31 @@ async def fightLoop(attackingPlayer: Player.player, defendingPlayer: Player.play
                                              view=myView)
         else:
             await choosingMessage.edit(currentPlayer.member.mention + "\nDEFENDING PLAYER - YOUR MOVE!", view=myView)
+
+
+@bot.slash_command(name='set_pos', description='amogus', guild_ids=[756058242781806703])
+async def setPos(ctx, *, x: int, y: int):
+    await ctx.defer()
+    userPlayer: Player.player = await findPlayerObject(ctx.author.id)
+    if userPlayer is None:
+        await ctx.respond("You are not in a game!")
+        return
+    userPlayer.moveTo(x - 1, y - 1)
+    await ctx.send("CURRENT: " + userPlayer.PrintStatus())
+    await ctx.send("POSSIBLE MOVES: " + str(userPlayer.canMoveTo()))
+    await userPlayer.myGame.generate_map()
+    await ctx.respond(file=discord.File(directoryPath + "\\games\\" + str(userPlayer.myGame.id) + "\\map.png"))
+
+
+@bot.slash_command(name='stats', description='notcomplete', guild_ids=[756058242781806703])
+async def stats(ctx):
+    player = await findCurrentPlayerObject(ctx.author.id)
+    if player is None:
+        player = await findPlayerObject(ctx.author.id)
+    if player is None:
+        await ctx.respond("you are not in a game!")
+        return
+    await ctx.respond(player.PrintStatus())
 
 
 bot.run(token)

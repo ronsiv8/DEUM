@@ -74,7 +74,9 @@ class player:
     def PrintStatus(self):
         return "position:(" + str(self.s.posX) + ", " + str(self.s.posY) + ") (functionally " + \
                str(self.s.posX + 1) + ", " + str(self.s.posY + 1) + ")\r HP: " + str(self.s.maxHP) + "/" + str(
-            self.s.currentHP)
+            self.s.currentHP) + "\r from team " + str(self.s.team) + "\rDamage Dealt multiplier:" + str(
+            self.s.DamageDealtMultiplier) + "\rDamage Taken multiplier: " + str(
+            self.s.DamageTakenMultiplier) + "\r" + self.hero.heroName + str(self.hero.heroObject)
 
     def canMoveTo(self):
         """
@@ -93,17 +95,18 @@ class player:
                             enemyZones.append((i + 1, j + 1))
         return canMove
 
-    async def adjacentPlayers(self):
+    async def adjacentEnemies(self):
         """
         Returns an array of players that are adjacent to the player.
         """
-        adjacentPlayers = []
+        adjacentEnemies = []
         for i in range(self.s.posX - 1, self.s.posX + 2):
             for j in range(self.s.posY - 1, self.s.posY + 2):
                 if 0 <= i < self.myGame.lengthX and 0 <= j < self.myGame.lengthY:
-                    if self.myGame.zones[i][j].isOccupied() and self.myGame.zones[i][j].myPlayer != self:
-                        adjacentPlayers.append(self.myGame.zones[i][j].myPlayer)
-        return adjacentPlayers
+                    if self.myGame.zones[i][j].isOccupied() and self.myGame.zones[i][j].myPlayer != self and \
+                            self.myGame.zones[i][j].myPlayer.s.team != self.s.team:
+                        adjacentEnemies.append(self.myGame.zones[i][j].myPlayer)
+        return adjacentEnemies
 
     async def executeEffects(self, effectName, amount):
         if effectName == "bleed":
@@ -229,26 +232,24 @@ class Horus:
     image: Image
     maxHP: int = 2000
     SandStacks: int = 1
-    SandSoldierList = []
-    coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 5}
+    coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 0}
     moveList = {"a1": {"abilityType": "outOfCombat", "maxCooldown": 2, "abilityName": "Arise!"
         , "abilityDesc": "Horus summons 2 sand soldiers at random areas across the map.",
                        "actionLine": "change this when it works"},
-                "a2": {"abilityType": "inCombat", "maxCooldown": 4, "abilityName": "Conquering Sands",
+                "a2": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Conquering Sands",
                        "abilityDesc": "Horus challenges the enemy, granting him a stack of sand soldiers and increases the damage the enemy takes by 10% permanently!",
-                       "actionLine": "Horus challenged {target}. {target} is Vulnerable!"}
+                       "actionLine": "Horus challenged {target}. they are Vulnerable!"}
         , "a3": {"abilityType": "outOfCombat", "maxCooldown": 0, "abilityName": "Shifting Sands",
                  "abilityDesc": "Horus consumes a stack of his sand soldiers to Dash the amount of sand soldiers on the field. then leaves a sand soldier in his original position!",
                  "actionLine": "change this when it works"}
         , "ult": {"abilityType": "outOfCombat", "maxCooldown": 5, "abilityName": "Emperor's Divide",
-                  "abilityDesc": "Horus imbues all current soldiers with power, granting them 5x damage and 1000 bonus max health.",
+                  "abilityDesc": "Horus empowers all current soldiers, granting them 5x damage and 1000 bonus max health.",
                   "actionLine": "change this when it works"}}
     playStyle = "Horus is the emperor of the sands. Horus summons sand soldiers to find for him, and challenges his opponent to increase his damage. play around your soldiers to control the field and win"
 
     def __init__(self, plyer):
         self.myPlayer = plyer
         self.maxHP = 2000
-        self.coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 5}
         self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\Horus_Face.png")
         self.myPlayer.s.maxHP = self.maxHP
         self.myPlayer.s.currentHP = self.myPlayer.s.maxHP
@@ -266,48 +267,73 @@ class Horus:
             message = await self.myPlayer.myGame.ctx.send(
                 file=discord.File(directoryPath + "\\games\\" + str(self.myPlayer.myGame.id) + "\\map.png"))
             self.myPlayer.myGame.mapMessage = message
-            # self.SandSoldierList.append(Summon(self.myPlayer, SandSoldier, x, y))
 
     def a1Possible(self):
         return self.SandStacks > 0
 
     async def a1(self):
         self.SandStacks -= 1
-        for i in range(1):
+        for i in range(2):
             x = random.randint(0, self.myPlayer.myGame.lengthX - 1)
             y = random.randint(0, self.myPlayer.myGame.lengthY - 1)
             await self.p(x, y)
 
-    def a2(self, target: player):
+    async def a2(self, target: player):
         target.s.DamageTakenMultiplier += 0.1
+        await target.TakeDamage(10 * self.myPlayer.s.DamageDealtMultiplier)
         self.SandStacks += 1
-        return {"target": target.hero.heroName}
+        return {"damage": round(10 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier),
+                "target": target.member.display_name}
 
     def a3Possible(self):
-        return len(self.SandSoldierList) > 0
+        for plyer in self.myPlayer.myGame.playerObjects:
+            if plyer.hero.heroName == "SandSoldier" and plyer.s.team == self.myPlayer.s.team:
+                return True
+        return False
 
-    def a3(self):
-        pass
+    async def a3(self):
+        originalX = self.myPlayer.s.posX
+        originalY = self.myPlayer.s.posY
+        dashLength: int = 1
+        for plyer in self.myPlayer.myGame.playerObjects:
+            if plyer.hero.heroName == "SandSoldier" and plyer.s.team == self.myPlayer.s.team:
+                dashLength += 1
+        await doAbility(abilityRequest={"Dash": {"range": dashLength}}, playerDo=self.myPlayer)
 
     def ultPossible(self):
-        return len(self.SandSoldierList) > 0
+        for plyer in self.myPlayer.myGame.playerObjects:
+            if plyer.hero.heroName == "SandSoldier" and plyer.s.team == self.myPlayer.s.team:
+                return True
+        return False
 
-    def ult(self):
-        for soldier in len(self.SandSoldierList):
-            soldier.myPlayer.s.DamageDealtMultiplier += 5
-            soldier.myPlayer.s.maxHP += 1000
-            soldier.myPlayer.s.currentHP += 1000
+    async def ult(self):
+        plyerList = []
+        for plyer in self.myPlayer.myGame.playerObjects:
+            if plyer.hero.heroName == "SandSoldier" and plyer.s.team == self.myPlayer.s.team:
+                plyerList.append(plyer)
+
+        await doAbility(abilityRequest={"Buff": {"plyerList": plyerList, "Buff": "empower"}}, playerDo=self.myPlayer)
 
 
 class SandSoldier:
     myPlayer: player = None
     image: Image
     maxHP: int = 500
-    coolDowns = {"a1"}
-    moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Solar Strike",
-                       "abilityDesc": "Ra commands the sun to fire at his enemy, dealing 50 DAMAGE. if Ra has 5 or "
-                                      "more SunLight, the beam will deal an additional 150 damage. ",
-                       "actionLine": "Ra Fires! It deals {damageDealt} to {target}!""{additionalText}"}}
+    coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 4}
+    moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Ordered Strike",
+                       "abilityDesc": "Strike the enemy on horus's command, dealing 50 DAMAGE.",
+                       "actionLine": "The sand soldier strikes! It deals {damage} to {target}!"},
+                "a2": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Consuming strike",
+                       "abilityDesc": "The sand soldier strikes for 100 damage but increases the enemies defense by 10% permanently"
+                                      "increases the damage the enemy takes by 10% permanently!",
+                       "actionLine": "The sand soldier strikes! It deals {damage} to {target}! they feel stronger now..."},
+                "a3": {"abilityType": "inCombat", "maxCooldown": 2, "abilityName": "Conquering Sands",
+                       "abilityDesc": "The sand soldier challenges the enemy,"
+                                      "increasing the damage the enemy takes by 10% permanently!",
+                       "actionLine": "Horus challenged {target}. they are Vulnerable!"},
+                "ult": {"abilityType": "inCombat", "maxCooldown": 5, "abilityName": "Valiant Sacrifice",
+                        "abilityDesc": "The sand soldier sacrifices its life to deal 200 damage",
+                        "actionLine": "The sand soldier strikes with its life! It deals {damage} to {target}!"}}
 
     def __init__(self, plyer):
         self.myPlayer = plyer
@@ -317,8 +343,26 @@ class SandSoldier:
         self.myPlayer.s.currentHP = self.myPlayer.s.maxHP
 
     async def a1(self, target: player):
-        await target.TakeDamage(150 * self.myPlayer.s.DamageDealtMultiplier)
-        return 150 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
+        await target.TakeDamage(50 * self.myPlayer.s.DamageDealtMultiplier)
+        return {"damage": round(150 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier),
+                "target": target.member.display_name}
+
+    async def a2(self, target: player):
+        await target.TakeDamage(100 * self.myPlayer.s.DamageDealtMultiplier)
+        target.s.DamageTakenMultiplier -= 0.1
+        return {"damage": round(200 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier),
+                "target": target.member.display_name}
+
+    async def a3(self, target: player):
+        await target.TakeDamage(5 * self.myPlayer.s.DamageDealtMultiplier)
+        target.s.DamageTakenMultiplier += 0.1
+        return {"damage": round(10 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier),
+                "target": target.member.display_name}
+
+    async def ult(self, target: player):
+        await target.TakeDamage(200 * self.myPlayer.s.DamageDealtMultiplier)
+        await self.myPlayer.myGame.killPlayer(self.myPlayer)
+        return {"damageDealt": 200 * self.myPlayer.s.DamageDealtMultiplier, "target": target.member.display_name}
 
 
 class Ra:
@@ -336,14 +380,14 @@ class Ra:
                                       "a sunMorb",
                        "actionLine": "the sun surrounds Ra, granting him {amount} damage reduction!"}
         , "a3": {"abilityType": "outOfCombat", "maxCooldown": 2, "abilityName": "Advanced Maneuver",
-                 "abilityDesc": "Ra utlizes his full potentional for 1 turn, gaining 1 bonus move range for each "
+                 "abilityDesc": "Ra utlizes his full potential for 1 turn, gaining 1 bonus move range for each "
                                 "stack of his SunLight",
                  "actionLine": "Ra Spreads wings made from SunLight, gaining {damageDealt} dealt! "}
         , "ult": {"abilityType": "inCombat", "maxCooldown": 2, "abilityName": "Sun Gods Searing Wrath",
                   "abilityDesc": "Ra channels the full power of the sun, dealing 2000 damage and healing himself for "
                                  "the damage dealt",
                   "actionLine": "Ra obliterates {target}! It deals {damageDealt} and heals Ra for {damageDealt}"}}
-    playStyle = "Ra is the Sun God, by collecting sun orbs he can ascend to his full potentional, dealing incredible " \
+    playStyle = "Ra is the Sun God, by collecting sun orbs he can ascend to his full potential, dealing incredible " \
                 "damage with very strong tools be sure to collect your orbs before your enemy destroys them to gain power and win the game!"
 
     def __init__(self, plyer):
@@ -441,6 +485,11 @@ async def doAbility(abilityRequest: dict, playerDo):
         print(abilityRequest[do])
         await Summon(playerDo, abilityRequest[do]["hero"], abilityRequest[do]["x"], abilityRequest[do]["y"])
         msg = True
+    elif "Buff" in list(abilityRequest.keys())[0]:
+        do = list(abilityRequest.keys())[0]
+        print(abilityRequest[do])
+        await Buff(abilityRequest[do]["plyerList"], abilityRequest[do]["Buff"])
+        msg = True
     return msg
 
 
@@ -487,8 +536,21 @@ async def doEffect(player, rangeWidth, rangeHeight, effect, duration, amount):
     # passive abilities dont generate maps
 
 
+async def Buff(plyerList, Buff):
+    if Buff == "empower":
+        for plyer in plyerList:
+            plyer.s.DamageDealtMultiplier += 5
+            plyer.s.maxHP += 1000
+            plyer.s.currentHP += 1000
+        await plyerList[0].myGame.ctx.send(
+            "All soldiers in team " + str(plyerList[0].s.team) + "feel empowered! Damage x5, Health +1000!",
+            delete_after=3)
+
+
 async def Summon(creator: player, Hero: str, posX: int, posY: int):
     newPlayer = player(posX, posY, creator.member, Hero, creator.myGame, creator.s.team)
     creator.myGame.playerObjects.append(newPlayer)
     creator.myGame.zones[posX][posY].myPlayer = newPlayer
-    return newPlayer.hero
+    await creator.myGame.ctx.send(
+        creator.hero.heroName + " Has Summoned " + Hero + " to the field!",
+        delete_after=3)

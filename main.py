@@ -63,6 +63,7 @@ async def start(ctx):
     timer = 60
 
     async def init_game():
+        global directoryPath
         """
         So basically this is here only to account for the _very_ rare case where there the gameId is already in use.
         VERY. RARE. Thank you copilot. :D <- that was copilot, not me. <- that was also copilot. <- that was copilot. <- that was copilot.

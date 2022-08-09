@@ -233,18 +233,15 @@ class Horus:
     SandStacks: int = 1
     coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 0}
     moveList = {"a1": {"abilityType": "outOfCombat", "maxCooldown": 2, "abilityName": "Arise!"
-        , "abilityDesc": "Horus summons 2 sand soldiers at random areas across the map.",
-                       "actionLine": "change this when it works"},
+        , "abilityDesc": "Horus consumes a sand stack to summon 2 sand soldiers at random areas across the map."},
                 "a2": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Conquering Sands",
-                       "abilityDesc": "Horus challenges the enemy, granting him a stack of sand soldiers and increases the damage the enemy takes by 10% permanently!",
+                       "abilityDesc": "Horus challenges the enemy, granting himself a sand stack and increases the damage the target takes by 10% permanently!",
                        "actionLine": "Horus challenged {target}. they are Vulnerable!"}
         , "a3": {"abilityType": "outOfCombat", "maxCooldown": 0, "abilityName": "Shifting Sands",
-                 "abilityDesc": "Horus consumes a stack of his sand soldiers to Dash the amount of sand soldiers on the field. then leaves a sand soldier in his original position!",
-                 "actionLine": "change this when it works"}
+                 "abilityDesc": "Horus consumes a sand stack to Dash the amount of sand soldiers on the field. then leaves a sand soldier in his original position!"}
         , "ult": {"abilityType": "outOfCombat", "maxCooldown": 5, "abilityName": "Emperor's Divide",
-                  "abilityDesc": "Horus empowers all current soldiers, granting them 5x damage and 1000 bonus max health.",
-                  "actionLine": "change this when it works"}}
-    playStyle = "Horus is the emperor of the sands. Horus summons sand soldiers to find for him, and challenges his opponent to increase his damage. play around your soldiers to control the field and win"
+                  "abilityDesc": "Horus empowers all current soldiers, granting them 5x damage and 1000 bonus max health."}}
+    playStyle = "Horus is the emperor of the sands. Horus summons sand soldiers to fight for him, and challenges his opponent to increase his damage. play around your soldiers to control the field and win"
 
     def __init__(self, plyer):
         self.myPlayer = plyer
@@ -377,16 +374,15 @@ class Ra:
     SunOrbs: int = 0
     moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Solar Strike",
                        "abilityDesc": "Ra commands the sun to fire at his enemy, dealing 50 DAMAGE. if Ra has 5 or "
-                                      "more SunLight, the beam will deal an additional 150 damage. ",
+                                      "more Sun orbs, the beam will deal an additional 150 damage. ",
                        "actionLine": "Ra Fires! It deals {damageDealt} to {target}!""{additionalText}"},
                 "a2": {"abilityType": "inCombat", "maxCooldown": 6, "abilityName": "Sun Light's Guard",
                        "abilityDesc": "Reduces my damage taken by 10 for each stack of Sun Light. cooldown is reduced by 1 whenever Ra picks "
-                                      "a sunMorb",
+                                      "a Sun orb",
                        "actionLine": "the sun surrounds Ra, granting him {amount} damage reduction!"}
         , "a3": {"abilityType": "outOfCombat", "maxCooldown": 2, "abilityName": "Advanced Maneuver",
                  "abilityDesc": "Ra utlizes his full potential for 1 turn, gaining 1 bonus move range for each "
-                                "stack of his SunLight",
-                 "actionLine": "Ra Spreads wings made from SunLight, gaining {damageDealt} dealt! "}
+                                "stack of his SunLight"}
         , "ult": {"abilityType": "inCombat", "maxCooldown": 2, "abilityName": "Sun Gods Searing Wrath",
                   "abilityDesc": "Ra channels the full power of the sun, dealing 2000 damage and healing himself for "
                                  "the damage dealt",

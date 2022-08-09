@@ -252,12 +252,12 @@ class Horus:
             await self.p(x, y)
         else:
             await doAbility(abilityRequest={"Summon": {"hero": "SandSoldier", "x": x, "y": y}}, playerDo=self.myPlayer)
-            await self.myPlayer.myGame.generate_map()
-            await self.myPlayer.myGame.mapMessage.delete()
-            directoryPath = os.path.dirname(os.path.realpath(__file__))
-            message = await self.myPlayer.myGame.ctx.send(
-                file=discord.File(directoryPath + "\\games\\" + str(self.myPlayer.myGame.id) + "\\map.png"))
-            self.myPlayer.myGame.mapMessage = message
+            # await self.myPlayer.myGame.generate_map()
+            # await self.myPlayer.myGame.mapMessage.delete()
+            # directoryPath = os.path.dirname(os.path.realpath(__file__))
+            # message = await self.myPlayer.myGame.ctx.send(
+            #     file=discord.File(directoryPath + "\\games\\" + str(self.myPlayer.myGame.id) + "\\map.png"))
+            # self.myPlayer.myGame.mapMessage = message
 
     def a1Possible(self):
         return self.SandStacks > 0
@@ -268,6 +268,7 @@ class Horus:
             x = random.randint(0, self.myPlayer.myGame.lengthX - 1)
             y = random.randint(0, self.myPlayer.myGame.lengthY - 1)
             await self.p(x, y)
+        await doAbility(abilityRequest={"Pass": {}}, playerDo=self.myPlayer)
 
     async def a2(self, target: player):
         target.s.DamageTakenMultiplier += 0.1
@@ -277,6 +278,8 @@ class Horus:
                 "target": target.member.display_name}
 
     def a3Possible(self):
+        if self.SandStacks > 0:
+            return False
         for plyer in self.myPlayer.myGame.playerObjects:
             if plyer.hero.heroName == "SandSoldier" and plyer.s.team == self.myPlayer.s.team:
                 return True
@@ -285,11 +288,13 @@ class Horus:
     async def a3(self):
         originalX = self.myPlayer.s.posX
         originalY = self.myPlayer.s.posY
-        dashLength: int = 1
+        self.SandStacks -= 1
+        dashLength: int = 0
         for plyer in self.myPlayer.myGame.playerObjects:
             if plyer.hero.heroName == "SandSoldier" and plyer.s.team == self.myPlayer.s.team:
                 dashLength += 1
         await doAbility(abilityRequest={"Dash": {"range": dashLength}}, playerDo=self.myPlayer)
+        await self.p(originalX, originalY)
 
     def ultPossible(self):
         for plyer in self.myPlayer.myGame.playerObjects:
@@ -318,7 +323,7 @@ class SandSoldier:
                        "abilityDesc": "The sand soldier strikes for 100 damage but increases the enemies defense by 10% permanently"
                                       "increases the damage the enemy takes by 10% permanently!",
                        "actionLine": "The sand soldier strikes! It deals {damage} to {target}! they feel stronger now..."},
-                "a3": {"abilityType": "inCombat", "maxCooldown": 2, "abilityName": "Conquering Sands",
+                "a3": {"abilityType": "inCombat", "maxCooldown": 2, "abilityName": "Sand Duel",
                        "abilityDesc": "The sand soldier challenges the enemy,"
                                       "increasing the damage the enemy takes by 10% permanently!",
                        "actionLine": "Horus challenged {target}. they are Vulnerable!"},
@@ -441,7 +446,7 @@ class hero:
         plyer.s.currentHP = self.heroObject.maxHP
 
 
-async def doAbility(abilityRequest: dict, playerDo):
+async def doAbility(abilityRequest: dict, playerDo: player):
     """
     Ability requests are built of a dict that is in order to what the end user needs to do.
     ability types:
@@ -449,6 +454,7 @@ async def doAbility(abilityRequest: dict, playerDo):
     Cause Effect (includes effect -> REQUIRED, amount, duration (one of these are required, replace the others with None)
     Damage (Zone, amount)
     Heal (Zone, amount)
+    :param playerDo:
     :param abilityRequest:
     :return:
     """
@@ -479,6 +485,8 @@ async def doAbility(abilityRequest: dict, playerDo):
         print(abilityRequest[do])
         await Buff(abilityRequest[do]["plyerList"], abilityRequest[do]["Buff"])
         msg = True
+    elif "Pass" in list(abilityRequest.keys())[0]:
+        msg = False
     return msg
 
 

@@ -44,7 +44,7 @@ async def playerToImage(player):
     return img
 
 
-@bot.slash_command(name="start", description="Start the game!", guild_ids=[756058242781806703])
+@bot.slash_command(name="start", description="Start the game!", guild_ids=[])
 async def start(ctx):
     await ctx.interaction.response.defer()
     timer = 60
@@ -192,7 +192,7 @@ async def findCurrentPlayerObject(userId):
 
 
 @bot.slash_command(name='pass_turn', description='pass your turn, counts as moving in place',
-                   guild_ids=[756058242781806703])
+                   guild_ids=[])
 async def pass_turn(ctx):
     await pass_turnFunc(ctx)
 
@@ -213,7 +213,7 @@ async def pass_turnFunc(ctx):
     await moveToFunc(ctx, userPlayer.s.posX+1, userPlayer.s.posY+1)
 
 
-@bot.slash_command(name='move_to', description='move to x,y', guild_ids=[756058242781806703])
+@bot.slash_command(name='move_to', description='move to x,y', guild_ids=[])
 async def moveTo(ctx, *, x: int, y: int):
     await moveToFunc(ctx, x, y)
 
@@ -430,7 +430,7 @@ async def fightLoop(attackingPlayer: Player.player, defendingPlayer: Player.play
             await choosingMessage.edit(currentPlayer.member.mention + "\nDEFENDING PLAYER - YOUR MOVE!", view=myView)
 
 
-@bot.slash_command(name='set_pos', description='amogus', guild_ids=[756058242781806703])
+@bot.slash_command(name='set_pos', description='amogus', guild_ids=[])
 async def setPos(ctx, *, x: int, y: int):
     await ctx.defer()
     userPlayer: Player.player = await findPlayerObject(ctx.author.id)
@@ -444,7 +444,7 @@ async def setPos(ctx, *, x: int, y: int):
     await ctx.respond(file=discord.File(directoryPath + "\\games\\" + str(userPlayer.myGame.id) + "\\map.png"))
 
 
-@bot.slash_command(name='stats', description='Shows your current characters stats.', guild_ids=[756058242781806703])
+@bot.slash_command(name='stats', description='Shows your current characters stats.', guild_ids=[])
 async def stats(ctx):
     player = await findCurrentPlayerObject(ctx.author.id)
     if player is None:

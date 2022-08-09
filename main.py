@@ -250,7 +250,7 @@ async def pass_turnFunc(ctx):
     if userPlayer.myGame.battle is not None:
         await ctx.respond("Please wait for the battle to end!", delete_after=1)
         return
-    await moveToFunc(ctx, userPlayer.s.posX, userPlayer.s.posY)
+    await moveToFunc(ctx, userPlayer.s.posX+1, userPlayer.s.posY+1)
 
 
 @bot.slash_command(name='move_to', description='move to x,y')
@@ -681,7 +681,7 @@ async def library(ctx):
     await sendLibrary(ctx)
 
 
-@bot.slash_command(name='stats', description='notcomplete')
+@bot.slash_command(name='stats', description='Shows your current characters stats.', guild_ids=[])
 async def stats(ctx):
     player = await findCurrentPlayerObject(ctx.author.id)
     if player is None:
@@ -689,7 +689,6 @@ async def stats(ctx):
     if player is None:
         await ctx.respond("you are not in a game!")
         return
-    await ctx.respond(player.PrintStatus())
-
+    await player.PrintStatus()
 
 bot.run(token)

@@ -236,6 +236,5 @@ class Game:
         """
         Kills a player
         """
-        await self.ctx.send("|FALLEN| " + player.hero.heroName.upper() + " HAS FALLEN! |FALLEN|", delete_after=5)
-        self.zones[player.s.posX][player.s.posY].myPlayer = None
+        await self.ctx.send("|FALLEN| " + player.hero.heroName.upper() + " HAS FALLEN! |FALLEN|")
         self.playerObjects.remove(player)

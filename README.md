@@ -50,6 +50,10 @@ The well known Ra is a strong late game character. He mainly gains power by pick
 <br/>
 <br/>
 <br/>
+<br/>
+<br/>
+<br/>
+<br/>
 
 <h3 align="right">Horus</h3>
 <img src="https://cdn.discordapp.com/attachments/1000021210622599178/1006535820062240778/Horus_Attack.png" width="350" align="right">

@@ -21,7 +21,7 @@ class S:  # short for status,stores stats
     speedProgress = 0
     statusEffects: dict = {}
 
-    def __init__(self, PosX: int, PosY: int, Team, movementSpeed=3):
+    def __init__(self, PosX: int, PosY: int, Team, movementSpeed=2):
         self.posX = PosX
         self.posY = PosY
         self.team = Team
@@ -71,12 +71,17 @@ class player:
             self.dead = True
             await self.myGame.killPlayer(self)
 
-    def PrintStatus(self):
-        return "position:(" + str(self.s.posX) + ", " + str(self.s.posY) + ") (functionally " + \
-               str(self.s.posX + 1) + ", " + str(self.s.posY + 1) + ")\r HP: " + str(self.s.maxHP) + "/" + str(
-            self.s.currentHP) + "\r from team " + str(self.s.team) + "\rDamage Dealt multiplier:" + str(
+    async def PrintStatus(self):
+        StatString = "player " + self.hero.heroName + " from team " + str(self.s.team) + "\r position:(" + str(
+            self.s.posX + 1) + ", " + str(
+            self.s.posY + 1) + ")\r HP: " + str(self.s.currentHP) + "/" + str(
+            self.s.maxHP) + "\rDamage Dealt multiplier:" + str(
             self.s.DamageDealtMultiplier) + "\rDamage Taken multiplier: " + str(
-            self.s.DamageTakenMultiplier) + "\r" + self.hero.heroName + str(self.hero.heroObject)
+            self.s.DamageTakenMultiplier) + "\r"
+        embed = discord.Embed()
+        embed.set_thumbnail(url="attachment://hero.png")
+        embed.add_field(name="stats: \r", value=StatString, inline=True)
+        await self.myGame.ctx.send(embed=embed)
 
     def canMoveTo(self):
         """
@@ -138,8 +143,9 @@ class player:
         if self.s.speedProgress >= 1:
             self.s.speedProgress = 0
             self.s.movementSpeed += 1
-            await self.myGame.ctx.send("{0}'s movement speed has increased to {1}!".format(self.hero.heroName, self.s.movementSpeed),
-                                       delete_after=5)
+            await self.myGame.ctx.send(
+                "{0}'s movement speed has increased to {1}!".format(self.hero.heroName, self.s.movementSpeed),
+                delete_after=5)
 
 
 class Sobek:
@@ -249,6 +255,7 @@ class Horus:
         self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\Horus_Face.png")
         self.myPlayer.s.maxHP = self.maxHP
         self.myPlayer.s.currentHP = self.myPlayer.s.maxHP
+        self.myPlayer.s.movementSpeed = 1
 
     async def p(self, x: int, y: int):
         if self.myPlayer.myGame.zones[x][y].isOccupied() or self.myPlayer.myGame.zones[x][y].myEvent is not None:
@@ -257,12 +264,6 @@ class Horus:
             await self.p(x, y)
         else:
             await doAbility(abilityRequest={"Summon": {"hero": "SandSoldier", "x": x, "y": y}}, playerDo=self.myPlayer)
-            # await self.myPlayer.myGame.generate_map()
-            # await self.myPlayer.myGame.mapMessage.delete()
-            # directoryPath = os.path.dirname(os.path.realpath(__file__))
-            # message = await self.myPlayer.myGame.ctx.send(
-            #     file=discord.File(directoryPath + "\\games\\" + str(self.myPlayer.myGame.id) + "\\map.png"))
-            # self.myPlayer.myGame.mapMessage = message
 
     def a1Possible(self):
         return self.SandStacks > 0
@@ -414,7 +415,8 @@ class Ra:
         if self.SunOrbs >= 5:
             await target.TakeDamage(150 * self.myPlayer.s.DamageDealtMultiplier)
             damagedealt += 150 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier
-            return {"damageDealt": int(damagedealt),"target":target.hero.heroName,"additionalText":"The Sun Scorched the enemy, dealing bonus damage!"}
+            return {"damageDealt": int(damagedealt), "target": target.hero.heroName,
+                    "additionalText": "The Sun Scorched the enemy, dealing bonus damage!"}
         return {"damageDealt": int(damagedealt), "target": target.hero.heroName,
                 "additionalText": "the attacks potential is not unleashed..."}
 
@@ -434,7 +436,8 @@ class Ra:
         self.myPlayer.s.currentHP = max(
             min(self.myPlayer.s.currentHP + 2000 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier,
                 self.myPlayer.s.maxHP), self.myPlayer.s.currentHP)
-        return {"damageDealt": int(2000 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier),"target":target.hero.heroName}
+        return {"damageDealt": int(2000 * target.s.DamageTakenMultiplier * self.myPlayer.s.DamageDealtMultiplier),
+                "target": target.hero.heroName}
 
 
 class hero:
@@ -547,7 +550,7 @@ async def Buff(plyerList, Buff):
             plyer.s.maxHP += 1000
             plyer.s.currentHP += 1000
         await plyerList[0].myGame.ctx.send(
-            "All soldiers in team " + str(plyerList[0].s.team) + "feel empowered! Damage x5, Health +1000!",
+            "All soldiers in team " + str(plyerList[0].s.team) + " feel empowered! Damage x5, Health +1000!",
             delete_after=3)
 
 
@@ -555,6 +558,7 @@ async def Summon(creator: player, Hero: str, posX: int, posY: int):
     newPlayer = player(posX, posY, creator.member, Hero, creator.myGame, creator.s.team)
     creator.myGame.playerObjects.append(newPlayer)
     creator.myGame.zones[posX][posY].myPlayer = newPlayer
+    newPlayer.s.movementSpeed = creator.s.movementSpeed
     await creator.myGame.ctx.send(
         creator.hero.heroName + " Has Summoned " + Hero + " to the field!",
         delete_after=3)

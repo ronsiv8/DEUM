@@ -210,7 +210,7 @@ async def pass_turnFunc(ctx):
     if userPlayer.myGame.battle is not None:
         await ctx.respond("Please wait for the battle to end!", delete_after=1)
         return
-    await moveToFunc(ctx, userPlayer.s.posX, userPlayer.s.posY)
+    await moveToFunc(ctx, userPlayer.s.posX+1, userPlayer.s.posY+1)
 
 
 @bot.slash_command(name='move_to', description='move to x,y', guild_ids=[756058242781806703])
@@ -444,7 +444,7 @@ async def setPos(ctx, *, x: int, y: int):
     await ctx.respond(file=discord.File(directoryPath + "\\games\\" + str(userPlayer.myGame.id) + "\\map.png"))
 
 
-@bot.slash_command(name='stats', description='notcomplete', guild_ids=[756058242781806703])
+@bot.slash_command(name='stats', description='Shows your current characters stats.', guild_ids=[756058242781806703])
 async def stats(ctx):
     player = await findCurrentPlayerObject(ctx.author.id)
     if player is None:
@@ -452,7 +452,7 @@ async def stats(ctx):
     if player is None:
         await ctx.respond("you are not in a game!")
         return
-    await ctx.respond(player.PrintStatus())
+    await player.PrintStatus()
 
 
 bot.run(token)

@@ -56,7 +56,7 @@ class event:
                 elif plyer.hero.heroObject.SunOrbs <= 5:
                     return "Ra has collected a sun orb! the power of the sun is unleashed!"
                 else:
-                    plyer.s.abilityCooldowns[4] = 0
+                    plyer.hero.heroObject.coolDowns['ult'] = 0
                     return "Ra has collected a sun orb! ,̶̜̳͛͠ ̴͍̹͎̉͠F̷͍̐Ō̷͔̂R̷̤̫͔̆ ̵̢̛̌̂Ṱ̷̬̺͗̀̓H̵̜̻͈͋̂E̶̼̜͑͜ ̴̢̻͔͝S̷̥̘͝Ứ̴̙̗͜N̵̖̱̜̐̉ ̵̫͖̂́́G̵͍̐̒Ǫ̶̂̃͑D̵̢͔̲͐̈́̓ ̵̘̭̅̂̍İ̶̘Ş̷̠͓̒ ̷̘͐͐̈́C̶̼̽ͅͅỎ̶̢̥̼̾M̴͓̈̌̕Ị̴̥̲͠N̸͔̦͋͝G̴̢͌̑ ̷̩̏T̷̻̱̬̋Õ̷͓̔ ̴̞̝̀̏̽R̴̖̗̂͝E̶̥͍͚͌̈́̊Ả̵̛͉̯P̷̲̗̐ "
             else:
                 self.myEvent.myZone.myEvent = None
@@ -85,6 +85,8 @@ class event:
                 choice = interaction.data['custom_id']
                 choice = choice.split(" ")
                 if choice[0] != "sacrifice":
+                    await ctx.send("You say that you appreciate the offer, but you don't want to take it.")
+                    await msg.delete()
                     return
                 healthSacrifice = plyer.s.currentHP * 0.1
                 plyer.s.currentHP -= healthSacrifice
@@ -134,12 +136,28 @@ class event:
             return "You pass through a brawl. It inspires you to fight longer! " \
                    "The attack turns limit is increased by 1!"
 
+    class healershut:
+        imageDirectory = os.path.dirname(os.path.realpath(__file__)) + "\\images\\healershut.png"
+        myEvent = None
+
+        def __init__(self, given):
+            self.imageDirectory = os.path.dirname(os.path.realpath(__file__)) + "\\images\\healershut.png"
+            self.myEvent = given
+
+        async def ActivateEvent(self, plyer):
+            self.myEvent.myZone.myEvent = None
+            plyer.s.currentHP += plyer.s.maxHP * 0.1
+            if plyer.s.currentHP > plyer.s.maxHP:
+                plyer.s.currentHP = plyer.s.maxHP
+            return "You find a healer's hut and heal for 10% of your max HP!"
+
     def __init__(self, EventName: str, myZone):
         self.eventName = EventName
         possible = {
             "sunOrb": self.sunOrb,
             "Stranger": self.stranger,
-            "brawl": self.brawl
+            "brawl": self.brawl,
+            "healershut": self.healershut
         }
         self.myZone = myZone
         self.eventObject = possible[EventName](self)

@@ -253,10 +253,11 @@ class Horus:
         self.myPlayer.s.maxHP = self.maxHP
         self.myPlayer.s.currentHP = self.myPlayer.s.maxHP
 
-    async def p(self, x: int, y: int):
-        if self.myPlayer.myGame.zones[x][y].isOccupied() or self.myPlayer.myGame.zones[x][y].myEvent is not None:
+    async def p(self, x: int = None, y: int = None):
+        if x is None and y is None:
             x = random.randint(0, self.myPlayer.myGame.lengthX - 1)
             y = random.randint(0, self.myPlayer.myGame.lengthY - 1)
+        if self.myPlayer.myGame.zones[x][y].isOccupied() or self.myPlayer.myGame.zones[x][y].myEvent is not None:
             await self.p(x, y)
         else:
             await doAbility(abilityRequest={"Summon": {"hero": "SandSoldier", "x": x, "y": y}}, playerDo=self.myPlayer)
@@ -273,9 +274,7 @@ class Horus:
     async def a1(self):
         self.SandStacks -= 1
         for i in range(2):
-            x = random.randint(0, self.myPlayer.myGame.lengthX - 1)
-            y = random.randint(0, self.myPlayer.myGame.lengthY - 1)
-            await self.p(x, y)
+            await self.p()
         await doAbility(abilityRequest={"Dash": {"range": 1}}, playerDo=self.myPlayer)
 
     async def a2(self, target: player):
@@ -323,7 +322,7 @@ class SandSoldier:
     myPlayer: player = None
     image: Image
     maxHP: int = 500
-    coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 4}
+    coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 0}
     moveList = {"a1": {"abilityType": "inCombat", "maxCooldown": 0, "abilityName": "Ordered Strike",
                        "abilityDesc": "Strike the enemy on horus's command, dealing 50 DAMAGE.",
                        "actionLine": "The sand soldier strikes! It deals {damage} to {target}!"},
@@ -365,7 +364,7 @@ class SandSoldier:
 
     async def ult(self, target: player):
         await target.TakeDamage(200 * self.myPlayer.s.DamageDealtMultiplier)
-        await self.TakeDamage(100000)
+        await self.myPlayer.TakeDamage(100000)
         return {"damage": round(200 * self.myPlayer.s.DamageDealtMultiplier), "target": target.member.display_name}
 
 
@@ -398,6 +397,7 @@ class Ra:
         self.myPlayer = plyer
         self.maxHP = 3500
         self.image = Image.open(os.path.dirname(os.path.realpath(__file__)) + "\\images\\Ra_Face.png")
+        self.coolDowns = {"a1": 0, "a2": 0, "a3": 0, "ult": 9999}
         self.myPlayer.s.maxHP = self.maxHP
         self.myPlayer.s.currentHP = self.myPlayer.s.maxHP
 

@@ -37,7 +37,7 @@ class Game:
     def __init__(self, id, creator, players, ctx, lengthX, lengthY, bot):
         self.id = id
         self.creator = creator
-        self.players = players
+        self.players = list(players.keys())
         self.ctx = ctx
         self.lengthX = lengthX
         self.lengthY = lengthY
@@ -62,10 +62,7 @@ class Game:
                 playerY = np.random.randint(0, lengthY)
                 if self.zones[playerX][playerY].isOccupied():
                     get_zone()
-                if discordId.id == 779321470039883777:
-                    newPlayer = player(playerX, playerY, discordId, "Sobek", self, count)
-                else:
-                    newPlayer = player(playerX, playerY, discordId, "Horus", self, count)
+                newPlayer = player(playerX, playerY, discordId, players[discordId], self, count)
                 self.playerObjects.append(newPlayer)
                 self.zones[playerX][playerY].myPlayer = newPlayer
             count+=1
@@ -75,17 +72,17 @@ class Game:
 
     async def generate_map(self):
         directoryPath = os.path.dirname(os.path.realpath(__file__))
-        img = Image.open(directoryPath + "\\images\\bg.jpg")
+        img = Image.open(directoryPath + "\\images\\bg.png")
         imageCopy = img.copy()
         imageCopy = imageCopy.resize((2700, 2700))
-        imageCopy.save(directoryPath + "\\games\\" + str(self.id) + "\\bg.jpg")
-        IA.draw_grid_over_image_with_players(directoryPath + "\\games\\" + str(self.id) + "\\bg.jpg"
+        imageCopy.save(directoryPath + "\\games\\" + str(self.id) + "\\bg.png")
+        IA.draw_grid_over_image_with_players(directoryPath + "\\games\\" + str(self.id) + "\\bg.png"
                                              , self.playerObjects)
         # image is created on map.jpg
 
     async def doTurn(self):
         self.turnNum += 1
-        if self.turnNum == len(self.playerObjects):
+        if self.turnNum >= len(self.playerObjects):
             self.turnNum = 0
             await self.RoundStartFunctions()
         turnPlayer = self.playerObjects[self.turnNum]
@@ -120,6 +117,8 @@ class Game:
             if interaction.user.id != turnPlayer.member.id:
                 return
             ability = interaction.data['custom_id']
+            if turnPlayer.hero.heroObject.coolDowns[ability] > 0:
+                await interaction.response.defer()
             turnPlayer.hero.heroObject.coolDowns[ability] = turnPlayer.hero.heroObject.moveList[ability]['maxCooldown']
             ability = getattr(turnPlayer.hero.heroObject, ability)
             await ability()
@@ -172,13 +171,16 @@ class Game:
             y = random.randint(0, self.lengthY - 1)
         events = [
             "Stranger",
-            "brawl"
+            "brawl",
+            "healershut"
         ]
         event = random.choice(events)
         if event == "Stranger":
             self.zones[x][y].myEvent = self.zones[x][y].event("Stranger")
         elif event == "brawl":
             self.zones[x][y].myEvent = self.zones[x][y].event("brawl")
+        elif event == "healershut":
+            self.zones[x][y].myEvent = self.zones[x][y].event("healershut")
         print("Event created at " + str(x) + "," + str(y))
 
     async def getNextPlayerTurn(self):
@@ -234,5 +236,6 @@ class Game:
         """
         Kills a player
         """
-        await self.ctx.send("|FALLEN| " + player.hero.heroName.upper() + " HAS FALLEN! |FALLEN|")
+        await self.ctx.send("|FALLEN| " + player.hero.heroName.upper() + " HAS FALLEN! |FALLEN|", delete_after=5)
+        self.zones[player.s.posX][player.s.posY].myPlayer = None
         self.playerObjects.remove(player)

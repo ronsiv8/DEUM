@@ -107,6 +107,7 @@ async def add_checks_to_map(locationArray, gameId, playerX, playerY, abilityChec
         img.paste(dotImage
                   , ((location[0] - 1) * 300 + 125, (location[1] - 1) * 300 + 125),
                   mask=dotImage)
+
     img.save(directoryPath + "/games/" + str(gameId) + "/map.png")
 
 

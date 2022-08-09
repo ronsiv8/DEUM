@@ -293,6 +293,7 @@ class Battle:
         self.myGame.battle = None
         await self.attackingTeam.myGame.checkFinishWhole()
 
+
     def getCurrentTurn(self):
         if self.turn == 0:
             return self.attackingTeam
